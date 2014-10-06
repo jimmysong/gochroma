@@ -3,10 +3,10 @@ package gochroma
 import (
 	"bytes"
 
-	"github.com/conformal/btcnet"
-	"github.com/conformal/btcrpcclient"
-	"github.com/conformal/btcutil"
-	"github.com/conformal/btcwire"
+	"github.com/monetas/btcnet"
+	"github.com/monetas/btcrpcclient"
+	"github.com/monetas/btcutil"
+	"github.com/monetas/btcwire"
 )
 
 // BlockExplorer represents a place where we can get blockchain data

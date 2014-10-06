@@ -8,10 +8,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/conformal/btclog"
-	"github.com/conformal/btcnet"
-	"github.com/conformal/btcrpcclient"
-	"github.com/jimmysong/gochroma"
+	"github.com/monetas/btclog"
+	"github.com/monetas/btcnet"
+	"github.com/monetas/btcrpcclient"
+	"github.com/monetas/gochroma"
 )
 
 var log btclog.Logger
