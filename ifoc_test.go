@@ -5,9 +5,9 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/conformal/btcutil"
-	"github.com/conformal/btcwire"
-	"github.com/jimmysong/gochroma"
+	"github.com/monetas/btcutil"
+	"github.com/monetas/btcwire"
+	"github.com/monetas/gochroma"
 )
 
 var key = "IFOC"

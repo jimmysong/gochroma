@@ -4,8 +4,8 @@ import (
 	"crypto/rand"
 	"testing"
 
-	"github.com/conformal/btcwire"
-	"github.com/jimmysong/gochroma"
+	"github.com/monetas/btcwire"
+	"github.com/monetas/gochroma"
 )
 
 func TestRegisterColorKernelError(t *testing.T) {

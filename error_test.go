@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/jimmysong/gochroma"
+	"github.com/monetas/gochroma"
 )
 
 func TestString(t *testing.T) {

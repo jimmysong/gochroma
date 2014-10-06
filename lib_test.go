@@ -1,7 +1,7 @@
 package gochroma_test
 
 import (
-	"github.com/jimmysong/gochroma"
+	"github.com/monetas/gochroma"
 )
 
 // Test block read/writer that returns whatever you initialize with.

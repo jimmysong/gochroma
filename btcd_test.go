@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/conformal/btcnet"
-	"github.com/conformal/btcrpcclient"
-	"github.com/jimmysong/gochroma"
+	"github.com/monetas/btcnet"
+	"github.com/monetas/btcrpcclient"
+	"github.com/monetas/gochroma"
 )
 
 func TestNewBtcdBlockExplorerError(t *testing.T) {

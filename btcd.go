@@ -5,10 +5,10 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/conformal/btcnet"
-	"github.com/conformal/btcrpcclient"
-	"github.com/conformal/btcutil"
-	"github.com/conformal/btcwire"
+	"github.com/monetas/btcnet"
+	"github.com/monetas/btcrpcclient"
+	"github.com/monetas/btcutil"
+	"github.com/monetas/btcwire"
 )
 
 // btcdBlockReaderWriter is a specific BlockReaderWriter that uses btcd in order

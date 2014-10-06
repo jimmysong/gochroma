@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/conformal/btcwire"
+	"github.com/monetas/btcwire"
 )
 
 type ColorId uint64
