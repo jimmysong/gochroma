@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/monetas/btclog"
@@ -26,7 +27,6 @@ func TestGetRawBlockAtHeight(t *testing.T) {
 		blockHash: [][]byte{hash},
 		block:     [][]byte{bytesWant},
 	}
-
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 
 	// Execute
@@ -51,7 +51,6 @@ func TestGetBlockAtHeight(t *testing.T) {
 		blockHash: [][]byte{hash},
 		block:     [][]byte{bytesWant},
 	}
-
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 
 	// Execute
@@ -67,6 +66,20 @@ func TestGetBlockAtHeight(t *testing.T) {
 	}
 	if bytes.Compare(bytesGot, bytesWant) != 0 {
 		t.Fatalf("Did not get block that we expected: got %x, want %x", bytesGot, bytesWant)
+	}
+}
+
+func TestGetBlockAtHeightError(t *testing.T) {
+	// Setup
+	blockReaderWriter := &TstBlockReaderWriter{}
+	b := &gochroma.BlockExplorer{blockReaderWriter}
+
+	// Execute
+	_, err := b.GetBlockAtHeight(1)
+
+	// Verify
+	if err == nil {
+		t.Fatal("Got nil where we expected error")
 	}
 }
 
@@ -109,7 +122,6 @@ func TestGetPreviousBlock(t *testing.T) {
 	blockReaderWriter := &TstBlockReaderWriter{
 		block: [][]byte{bytesCurrent, bytesWant},
 	}
-
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 
 	// Execute
@@ -137,7 +149,6 @@ func TestGetTx(t *testing.T) {
 	blockReaderWriter := &TstBlockReaderWriter{
 		rawTx: [][]byte{bytesWant},
 	}
-
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 
 	// Execute
@@ -154,6 +165,46 @@ func TestGetTx(t *testing.T) {
 	}
 	if bytes.Compare(bytesGot.Bytes(), bytesWant) != 0 {
 		t.Fatalf("Did not get tx that we expected: got %x, want %x", bytesGot.Bytes(), bytesWant)
+	}
+}
+
+func TestGetTxError(t *testing.T) {
+	// Setup
+	blockReaderWriter := &TstBlockReaderWriter{}
+	b := &gochroma.BlockExplorer{blockReaderWriter}
+
+	// Execute
+	_, err := b.GetTx([]byte{0x00})
+
+	// Verify
+	if err == nil {
+		t.Fatal("Got nil where we expected error")
+	}
+}
+
+func TestGetPreviousBlockError(t *testing.T) {
+	// Setup
+	blockReaderWriter := &TstBlockReaderWriter{}
+	b := &gochroma.BlockExplorer{blockReaderWriter}
+
+	// Execute
+	_, err := b.GetPreviousBlock([]byte{0x00})
+
+	// Verify
+	if err == nil {
+		t.Fatal("Got nil where we expected error")
+	}
+}
+
+func TestNewBtcdBlockExplorerError(t *testing.T) {
+	connConfig := &btcrpcclient.ConnConfig{
+		Proxy:        "%gh&%ij",
+		HttpPostMode: true,
+		DisableTLS:   true,
+	}
+	_, err := gochroma.NewBtcdBlockExplorer(nil, connConfig)
+	if err == nil {
+		t.Fatal("Got nil where we expected error")
 	}
 }
 
@@ -226,6 +277,31 @@ func TestGetBlockHash(t *testing.T) {
 	}
 }
 
+func TestGetBlockHashError(t *testing.T) {
+	// Setup
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		response := fmt.Sprintf("nonsense")
+		fmt.Fprintln(w, response)
+	}))
+	defer ts.Close()
+	net := &btcnet.TestNet3Params
+	connConfig := &btcrpcclient.ConnConfig{
+		Host:         ts.URL[7:],
+		HttpPostMode: true,
+		DisableTLS:   true,
+	}
+	b, err := gochroma.NewBtcdBlockExplorer(net, connConfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Execute
+	_, err = b.GetBlockHash(1)
+	if err == nil {
+		t.Fatal("Got nil where we expected error")
+	}
+}
+
 func TestGetRawBlock(t *testing.T) {
 	// Setup
 	hashStr := "00000000003583bc221e70c80ce8e3d67b49be70bb3b1fd6a191d2040babd3e8"
@@ -260,6 +336,68 @@ func TestGetRawBlock(t *testing.T) {
 	}
 }
 
+func TestGetRawBlockError1(t *testing.T) {
+	// Setup
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "")
+	}))
+	defer ts.Close()
+	net := &btcnet.TestNet3Params
+	connConfig := &btcrpcclient.ConnConfig{
+		Host:         ts.URL[7:],
+		HttpPostMode: true,
+		DisableTLS:   true,
+	}
+	b, err := gochroma.NewBtcdBlockExplorer(net, connConfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Execute
+	_, err = b.GetRawBlock([]byte{0x00})
+
+	// Verify
+	if err == nil {
+		t.Fatal("Got nil where we expected error")
+	}
+	wantString := "invalid sha length"
+	if !strings.Contains(err.Error(), wantString) {
+		t.Fatalf("Got the wrong error, got %v want something with %v", err.Error(), wantString)
+	}
+}
+
+func TestGetRawBlockError2(t *testing.T) {
+	// Setup
+	hashStr := "00000000003583bc221e70c80ce8e3d67b49be70bb3b1fd6a191d2040babd3e8"
+	hash, _ := hex.DecodeString(hashStr)
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "nonsense")
+	}))
+	defer ts.Close()
+	net := &btcnet.TestNet3Params
+	connConfig := &btcrpcclient.ConnConfig{
+		Host:         ts.URL[7:],
+		HttpPostMode: true,
+		DisableTLS:   true,
+	}
+	b, err := gochroma.NewBtcdBlockExplorer(net, connConfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Execute
+	_, err = b.GetRawBlock(hash)
+
+	// Verify
+	if err == nil {
+		t.Fatal("Got nil where we expected error")
+	}
+	wantString := "invalid character"
+	if !strings.Contains(err.Error(), wantString) {
+		t.Fatalf("Got the wrong error, got %v want something with %v", err.Error(), wantString)
+	}
+}
+
 func TestGetRawTx(t *testing.T) {
 	// Setup
 	hashStr := "1d235c4ea39e7f3151e784283319485f4b5eb92e553ee6d307c0201b4125e09f"
@@ -291,6 +429,68 @@ func TestGetRawTx(t *testing.T) {
 	// Verify
 	if bytes.Compare(bytesGot, bytesWant) != 0 {
 		t.Fatalf("Did not get back what we expected: got %x, want %x", bytesGot, bytesWant)
+	}
+}
+
+func TestGetRawTxError1(t *testing.T) {
+	// Setup
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "")
+	}))
+	defer ts.Close()
+	net := &btcnet.TestNet3Params
+	connConfig := &btcrpcclient.ConnConfig{
+		Host:         ts.URL[7:],
+		HttpPostMode: true,
+		DisableTLS:   true,
+	}
+	b, err := gochroma.NewBtcdBlockExplorer(net, connConfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Execute
+	_, err = b.GetRawTx([]byte{0x00})
+
+	// Verify
+	if err == nil {
+		t.Fatal("Got nil where we expected error")
+	}
+	wantString := "invalid sha length"
+	if !strings.Contains(err.Error(), wantString) {
+		t.Fatalf("Got the wrong error, got %v want something with %v", err.Error(), wantString)
+	}
+}
+
+func TestGetRawTxError2(t *testing.T) {
+	// Setup
+	hashStr := "1d235c4ea39e7f3151e784283319485f4b5eb92e553ee6d307c0201b4125e09f"
+	hash, _ := hex.DecodeString(hashStr)
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "nonsense")
+	}))
+	defer ts.Close()
+	net := &btcnet.TestNet3Params
+	connConfig := &btcrpcclient.ConnConfig{
+		Host:         ts.URL[7:],
+		HttpPostMode: true,
+		DisableTLS:   true,
+	}
+	b, err := gochroma.NewBtcdBlockExplorer(net, connConfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Execute
+	_, err = b.GetRawTx(hash)
+
+	// Verify
+	if err == nil {
+		t.Fatal("Got nil where we expected error")
+	}
+	wantString := "invalid character"
+	if !strings.Contains(err.Error(), wantString) {
+		t.Fatalf("Got the wrong error, got %v want something with %v", err.Error(), wantString)
 	}
 }
 
@@ -330,5 +530,70 @@ func TestSendRawTx(t *testing.T) {
 	// Verify
 	if bytes.Compare(hashGot, hashWant) != 0 {
 		t.Fatalf("Did not get back what we expected: got %x, want %x", hashGot, hashWant)
+	}
+}
+
+func TestSendRawTxError1(t *testing.T) {
+	// Setup
+	bytesStr := "01"
+	bytesToSend, _ := hex.DecodeString(bytesStr)
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "")
+	}))
+	defer ts.Close()
+	net := &btcnet.TestNet3Params
+	connConfig := &btcrpcclient.ConnConfig{
+		Host:         ts.URL[7:],
+		HttpPostMode: true,
+		DisableTLS:   true,
+	}
+	b, err := gochroma.NewBtcdBlockExplorer(net, connConfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Execute
+	_, err = b.SendRawTx(bytesToSend)
+
+	// Verify
+	if err == nil {
+		t.Fatal("Got nil where we expected error")
+	}
+	wantString := "unexpected EOF"
+	if !strings.Contains(err.Error(), wantString) {
+		t.Fatalf("Got the wrong error, got %v want something with %v", err.Error(), wantString)
+	}
+}
+
+func TestSendRawTxError2(t *testing.T) {
+	// Setup
+	bytesStr := "0100000001aa570d9d285fe85030361b9704068b80bea89e49ad26079c2ecca8a555f8bbb8010000006c493046022100b09a37ead2637d8ffdbe2fb896a74a1c9e2f01ce306b24def2688cb7810ae609022100c019910aaf0a3317d4555441580bc5a5de6f7851d86e81aa854fef38debfefbc0121037843af5cf98718f57d6887f01d7b30bd0c6ed915eb6648ee30889861bd3a7feaffffffff0200e1f505000000001976a9149bbd3b6b3da61901454a9e3c0a22ac6c626cc0fa88ac32f8196f000000001976a9144d273d3a2ce1824d1c6db0764eebb03f368fd9af88ac00000000"
+	bytesToSend, _ := hex.DecodeString(bytesStr)
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		response := fmt.Sprintf("nonsense")
+		fmt.Fprintln(w, response)
+	}))
+	defer ts.Close()
+	net := &btcnet.TestNet3Params
+	connConfig := &btcrpcclient.ConnConfig{
+		Host:         ts.URL[7:],
+		HttpPostMode: true,
+		DisableTLS:   true,
+	}
+	b, err := gochroma.NewBtcdBlockExplorer(net, connConfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Execute
+	_, err = b.SendRawTx(bytesToSend)
+
+	// Verify
+	if err == nil {
+		t.Fatal("Got nil where we expected error")
+	}
+	wantString := "invalid character"
+	if !strings.Contains(err.Error(), wantString) {
+		t.Fatalf("Got the wrong error, got %v want something with %v", err.Error(), wantString)
 	}
 }
