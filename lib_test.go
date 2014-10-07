@@ -8,11 +8,13 @@ import (
 // Note each slice is a queue that shifts one off and throws an error
 // if there's none left.
 type TstBlockReaderWriter struct {
-	blockCount []int64
-	blockHash  [][]byte
-	block      [][]byte
-	rawTx      [][]byte
-	sendHash   [][]byte
+	blockCount  []int64
+	blockHash   [][]byte
+	block       [][]byte
+	rawTx       [][]byte
+	txBlockHash [][]byte
+	mempoolTxs  [][][]byte
+	sendHash    [][]byte
 }
 
 func (b *TstBlockReaderWriter) GetBlockCount() (int64, error) {
@@ -48,6 +50,24 @@ func (b *TstBlockReaderWriter) GetRawTx(_ []byte) ([]byte, error) {
 	}
 	ret := b.rawTx[0]
 	b.rawTx = b.rawTx[1:]
+	return ret, nil
+}
+
+func (b *TstBlockReaderWriter) GetTxBlockHash(_ []byte) ([]byte, error) {
+	if len(b.txBlockHash) == 0 {
+		return nil, errors.New("GetTxBlockHash Error")
+	}
+	ret := b.txBlockHash[0]
+	b.txBlockHash = b.txBlockHash[1:]
+	return ret, nil
+}
+
+func (b *TstBlockReaderWriter) GetMempoolTxs() ([][]byte, error) {
+	if len(b.mempoolTxs) == 0 {
+		return nil, errors.New("GetMempoolTxs Error")
+	}
+	ret := b.mempoolTxs[0]
+	b.mempoolTxs = b.mempoolTxs[1:]
 	return ret, nil
 }
 
