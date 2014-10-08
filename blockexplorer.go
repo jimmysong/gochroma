@@ -2,6 +2,7 @@ package gochroma
 
 import (
 	"github.com/conformal/btcutil"
+	"github.com/conformal/btcwire"
 )
 
 // BlockReaderWriter is any place where we can get raw blockchain data
@@ -86,6 +87,17 @@ func (b *BlockExplorer) GetTx(hash []byte) (*btcutil.Tx, error) {
 		return nil, err
 	}
 	return btcutil.NewTxFromBytes(raw)
+}
+
+// GetOutPointValue returns how much many satoshis exist at this tx/index
+func (b *BlockExplorer) GetOutPointValue(outpoint *btcwire.OutPoint) (int64, error) {
+	tx, err := b.GetTx(outpoint.Hash.Bytes())
+	if err != nil {
+		return -1, err
+	}
+	out := tx.MsgTx().TxOut[outpoint.Index]
+
+	return out.Value, nil
 }
 
 // GetTxBlock returns the *btcutil.Block struct of the transaction identified by

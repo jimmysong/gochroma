@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"testing"
 
+	"github.com/conformal/btcwire"
 	"github.com/jimmysong/gochroma"
 )
 
@@ -209,6 +210,54 @@ func TestGetTxError(t *testing.T) {
 
 	// Execute
 	_, err := b.GetTx([]byte{0x00})
+
+	// Verify
+	if err == nil {
+		t.Fatal("Got nil where we expected error")
+	}
+}
+
+func TestGetOutPointValue(t *testing.T) {
+	// Setup
+	bytesStr := "0100000001aa570d9d285fe85030361b9704068b80bea89e49ad26079c2ecca8a555f8bbb8010000006c493046022100b09a37ead2637d8ffdbe2fb896a74a1c9e2f01ce306b24def2688cb7810ae609022100c019910aaf0a3317d4555441580bc5a5de6f7851d86e81aa854fef38debfefbc0121037843af5cf98718f57d6887f01d7b30bd0c6ed915eb6648ee30889861bd3a7feaffffffff0200e1f505000000001976a9149bbd3b6b3da61901454a9e3c0a22ac6c626cc0fa88ac32f8196f000000001976a9144d273d3a2ce1824d1c6db0764eebb03f368fd9af88ac00000000"
+	bytesWant, _ := hex.DecodeString(bytesStr)
+	blockReaderWriter := &TstBlockReaderWriter{
+		rawTx: [][]byte{bytesWant},
+	}
+	b := &gochroma.BlockExplorer{blockReaderWriter}
+	hashStr := "1d235c4ea39e7f3151e784283319485f4b5eb92e553ee6d307c0201b4125e09f"
+	shaHash, err := btcwire.NewShaHashFromStr(hashStr)
+	if err != nil {
+		t.Fatalf("failed to convert hash %v: %v", hashStr, err)
+	}
+	outPoint := btcwire.NewOutPoint(shaHash, 0)
+
+	// Execute
+	value, err := b.GetOutPointValue(outPoint)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Verify
+	wantValue := int64(100000000)
+	if value != wantValue {
+		t.Fatalf("Did not get value that we expected: got %d, want %d", value, wantValue)
+	}
+}
+
+func TestGetOutPointValueError(t *testing.T) {
+	// Setup
+	blockReaderWriter := &TstBlockReaderWriter{}
+	b := &gochroma.BlockExplorer{blockReaderWriter}
+	hashStr := "1d235c4ea39e7f3151e784283319485f4b5eb92e553ee6d307c0201b4125e09f"
+	shaHash, err := btcwire.NewShaHashFromStr(hashStr)
+	if err != nil {
+		t.Fatalf("failed to convert hash %v: %v", hashStr, err)
+	}
+	outPoint := btcwire.NewOutPoint(shaHash, 0)
+
+	// Execute
+	_, err = b.GetOutPointValue(outPoint)
 
 	// Verify
 	if err == nil {
