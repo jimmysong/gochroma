@@ -121,3 +121,8 @@ func (b *BlockExplorer) OutPointValue(outpoint *btcwire.OutPoint) (int64, error)
 func (b *BlockExplorer) OutPointTx(outpoint *btcwire.OutPoint) (*btcutil.Tx, error) {
 	return b.Tx(outpoint.Hash.Bytes())
 }
+
+// OutPointTx returns the transaction the outpoint points to
+func (b *BlockExplorer) OutPointHeight(outpoint *btcwire.OutPoint) (int64, error) {
+	return b.TxHeight(outpoint.Hash.Bytes())
+}

@@ -23,8 +23,7 @@ func (k IFOC) getChange(b *BlockExplorer, inputs []*btcwire.OutPoint, fee int64)
 	for _, input := range inputs {
 		value, err := b.OutPointValue(input)
 		if err != nil {
-			str := fmt.Sprintf("input %v got errors", input)
-			return nil, makeError(ErrInvalidTx, str, err)
+			return nil, err
 		}
 		sum += value
 	}
@@ -60,6 +59,68 @@ func (k IFOC) checkOutputs(outputs []*ColorOut, destroy bool) error {
 	}
 
 	return nil
+}
+
+func (k IFOC) OutPointToColorIn(b *BlockExplorer,
+	genesis, outPoint *btcwire.OutPoint) (*ColorIn, error) {
+	value, err := b.OutPointValue(outPoint)
+	if err != nil {
+		return nil, err
+	}
+	colorIn := &ColorIn{
+		OutPoint:   outPoint,
+		ColorValue: ColorValue(0),
+	}
+	// If the outpoint isn't the right amount, we can assume 0
+	if value != k.TransferAmount {
+		return colorIn, nil
+	}
+	current := outPoint
+	genesisHeight, err := b.OutPointHeight(genesis)
+	if err != nil {
+		return nil, err
+	}
+
+	for !genesis.Hash.IsEqual(&current.Hash) {
+		height, err := b.OutPointHeight(current)
+		if err != nil {
+			return nil, err
+		}
+		if height < genesisHeight {
+			return colorIn, nil
+		}
+		tx, err := b.OutPointTx(current)
+		if err != nil {
+			return nil, err
+		}
+		inputs, err := k.FindAffectingInputs(
+			b, genesis, tx.MsgTx(), []int{int(current.Index)})
+		if err != nil {
+			return nil, err
+		}
+		if inputs == nil {
+			return colorIn, nil
+		}
+		current = inputs[0]
+	}
+	if current.Index == genesis.Index {
+		colorIn.ColorValue = ColorValue(1)
+	}
+	return colorIn, nil
+}
+
+func (k IFOC) ColorInsValid(b *BlockExplorer, genesis *btcwire.OutPoint,
+	colorIns []*ColorIn) (bool, error) {
+	for _, colorIn := range colorIns {
+		calculated, err := k.OutPointToColorIn(b, genesis, colorIn.OutPoint)
+		if err != nil {
+			return false, err
+		}
+		if calculated.ColorValue != colorIn.ColorValue {
+			return false, nil
+		}
+	}
+	return true, nil
 }
 
 func (k IFOC) IssuingTx(b *BlockExplorer, inputs []*btcwire.OutPoint,
@@ -107,6 +168,14 @@ func (k IFOC) TransferringTx(b *BlockExplorer, inputs []*ColorIn,
 		inSum += input.ColorValue
 	}
 	if inSum != 1 {
+		return nil, makeError(ErrInvalidColorValue, "IFOC only supports exactly 1 color value", nil)
+	}
+	// check the color value
+	outSum := ColorValue(0)
+	for _, output := range outputs {
+		outSum += output.ColorValue
+	}
+	if outSum != 1 {
 		return nil, makeError(ErrInvalidColorValue, "IFOC only supports exactly 1 color value", nil)
 	}
 
@@ -164,13 +233,13 @@ func (k IFOC) CalculateOutColorValues(genesis *btcwire.OutPoint, tx *btcwire.Msg
 	return outputs, nil
 }
 
-func (k IFOC) FindAffectingInputs(genesis *btcwire.OutPoint, tx *btcwire.MsgTx, outputs []int) ([]*btcwire.TxIn, error) {
+func (k IFOC) FindAffectingInputs(b *BlockExplorer, genesis *btcwire.OutPoint, tx *btcwire.MsgTx, outputs []int) ([]*btcwire.OutPoint, error) {
 	// handle case where the tx is the issuing tx
 	txShaHash, err := tx.TxSha()
 	if err != nil {
 		return nil, makeError(ErrInvalidTx, "transaction does not have a hash", err)
 	}
-	if genesis.Hash.String() == txShaHash.String() {
+	if genesis.Hash.IsEqual(&txShaHash) {
 		return nil, nil
 	}
 
@@ -189,5 +258,15 @@ func (k IFOC) FindAffectingInputs(genesis *btcwire.OutPoint, tx *btcwire.MsgTx, 
 		return nil, makeError(ErrBadOutputIndex, "can't track back any index other than 0", err)
 	}
 
-	return []*btcwire.TxIn{tx.TxIn[0]}, nil
+	// check that the right amount is in the first input
+	outPoint := tx.TxIn[0].PreviousOutPoint
+	value, err := b.OutPointValue(&outPoint)
+	if err != nil {
+		return nil, err
+	}
+	if value != k.TransferAmount {
+		return nil, nil
+	}
+
+	return []*btcwire.OutPoint{&outPoint}, nil
 }

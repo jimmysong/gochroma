@@ -33,6 +33,11 @@ type ColorOut struct {
 type ColorKernel interface {
 	// 4-6 letter code for the kernel
 	Code() string
+	// Takes any outpoint and determines the color value given the genesis
+	OutPointToColorIn(b *BlockExplorer, genesis, outPoint *btcwire.OutPoint) (*ColorIn, error)
+	// Validates the color inputs and checks if the color values
+	// correspond to this kernel and genesis
+	ColorInsValid(b *BlockExplorer, genesis *btcwire.OutPoint, colorIns []*ColorIn) (bool, error)
 	// Returns the unsigned transaction that will issue the color
 	// of this kernel with a certain color value
 	IssuingTx(b *BlockExplorer, inputs []*btcwire.OutPoint, outputs []*ColorOut, changeScript []byte, fee int64) (*btcwire.MsgTx, error)
@@ -44,7 +49,7 @@ type ColorKernel interface {
 	CalculateOutColorValues(genesis *btcwire.OutPoint, tx *btcwire.MsgTx, inputs []ColorValue) ([]ColorValue, error)
 	// Figures out which inputs the outputs were affected by.
 	// Note the outputs array is the collection of indices for tx.TxOuts
-	FindAffectingInputs(genesis *btcwire.OutPoint, tx *btcwire.MsgTx, outputs []int) ([]*btcwire.TxIn, error)
+	FindAffectingInputs(b *BlockExplorer, genesis *btcwire.OutPoint, tx *btcwire.MsgTx, outputs []int) ([]*btcwire.OutPoint, error)
 }
 
 var kernelMap = make(map[string]ColorKernel, 10)
@@ -85,8 +90,8 @@ func (c *ColorDefinition) RunKernel(tx *btcwire.MsgTx, inputs []ColorValue) ([]C
 	return c.CalculateOutColorValues(c.Genesis, tx, inputs)
 }
 
-func (c *ColorDefinition) AffectingInputs(tx *btcwire.MsgTx, outputs []int) ([]*btcwire.TxIn, error) {
-	return c.FindAffectingInputs(c.Genesis, tx, outputs)
+func (c *ColorDefinition) AffectingInputs(b *BlockExplorer, tx *btcwire.MsgTx, outputs []int) ([]*btcwire.OutPoint, error) {
+	return c.FindAffectingInputs(b, c.Genesis, tx, outputs)
 }
 
 func NewColorDefinition(kernel ColorKernel, genesis *btcwire.OutPoint, height int64) (*ColorDefinition, error) {

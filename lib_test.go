@@ -27,6 +27,7 @@ func (b *TstBlockReaderWriter) BlockCount() (int64, error) {
 }
 
 func (b *TstBlockReaderWriter) BlockHash(_ int64) ([]byte, error) {
+
 	if len(b.blockHash) == 0 {
 		return nil, gochroma.MakeError(gochroma.ErrBlockRead, "BlockHash Error", nil)
 	}
