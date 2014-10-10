@@ -29,6 +29,12 @@ func TestNewBtcdBlockExplorerError(t *testing.T) {
 	if err == nil {
 		t.Fatal("Got nil where we expected error")
 	}
+	rerr := err.(gochroma.ChromaError)
+	wantErr := gochroma.ErrorCode(gochroma.ErrConnect)
+	if rerr.ErrorCode != wantErr {
+		t.Errorf("wrong error passed back: got %v, want %v",
+			rerr.ErrorCode, wantErr)
+	}
 }
 
 func TestBlockCount(t *testing.T) {
@@ -125,6 +131,12 @@ func TestBlockHashError(t *testing.T) {
 	if err == nil {
 		t.Fatal("Got nil where we expected error")
 	}
+	rerr := err.(gochroma.ChromaError)
+	wantErr := gochroma.ErrorCode(gochroma.ErrBlockRead)
+	if rerr.ErrorCode != wantErr {
+		t.Errorf("wrong error passed back: got %v, want %v",
+			rerr.ErrorCode, wantErr)
+	}
 }
 
 func TestRawBlock(t *testing.T) {
@@ -185,9 +197,11 @@ func TestRawBlockError1(t *testing.T) {
 	if err == nil {
 		t.Fatal("Got nil where we expected error")
 	}
-	wantString := "invalid sha length"
-	if !strings.Contains(err.Error(), wantString) {
-		t.Fatalf("Got the wrong error, got %v want something with %v", err.Error(), wantString)
+	rerr := err.(gochroma.ChromaError)
+	wantErr := gochroma.ErrorCode(gochroma.ErrInvalidHash)
+	if rerr.ErrorCode != wantErr {
+		t.Errorf("wrong error passed back: got %v, want %v",
+			rerr.ErrorCode, wantErr)
 	}
 }
 
@@ -217,9 +231,11 @@ func TestRawBlockError2(t *testing.T) {
 	if err == nil {
 		t.Fatal("Got nil where we expected error")
 	}
-	wantString := "invalid character"
-	if !strings.Contains(err.Error(), wantString) {
-		t.Fatalf("Got the wrong error, got %v want something with %v", err.Error(), wantString)
+	rerr := err.(gochroma.ChromaError)
+	wantErr := gochroma.ErrorCode(gochroma.ErrBlockRead)
+	if rerr.ErrorCode != wantErr {
+		t.Errorf("wrong error passed back: got %v, want %v",
+			rerr.ErrorCode, wantErr)
 	}
 }
 
@@ -281,9 +297,11 @@ func TestRawTxError1(t *testing.T) {
 	if err == nil {
 		t.Fatal("Got nil where we expected error")
 	}
-	wantString := "invalid sha length"
-	if !strings.Contains(err.Error(), wantString) {
-		t.Fatalf("Got the wrong error, got %v want something with %v", err.Error(), wantString)
+	rerr := err.(gochroma.ChromaError)
+	wantErr := gochroma.ErrorCode(gochroma.ErrInvalidHash)
+	if rerr.ErrorCode != wantErr {
+		t.Errorf("wrong error passed back: got %v, want %v",
+			rerr.ErrorCode, wantErr)
 	}
 }
 
@@ -313,9 +331,11 @@ func TestRawTxError2(t *testing.T) {
 	if err == nil {
 		t.Fatal("Got nil where we expected error")
 	}
-	wantString := "invalid character"
-	if !strings.Contains(err.Error(), wantString) {
-		t.Fatalf("Got the wrong error, got %v want something with %v", err.Error(), wantString)
+	rerr := err.(gochroma.ChromaError)
+	wantErr := gochroma.ErrorCode(gochroma.ErrBlockRead)
+	if rerr.ErrorCode != wantErr {
+		t.Errorf("wrong error passed back: got %v, want %v",
+			rerr.ErrorCode, wantErr)
 	}
 }
 
@@ -411,9 +431,11 @@ func TestTxBlockHashError1(t *testing.T) {
 	if err == nil {
 		t.Fatal("Got nil where we expected error")
 	}
-	wantString := "invalid sha length"
-	if !strings.Contains(err.Error(), wantString) {
-		t.Fatalf("Got the wrong error, got %v want something with %v", err.Error(), wantString)
+	rerr := err.(gochroma.ChromaError)
+	wantErr := gochroma.ErrorCode(gochroma.ErrInvalidHash)
+	if rerr.ErrorCode != wantErr {
+		t.Errorf("wrong error passed back: got %v, want %v",
+			rerr.ErrorCode, wantErr)
 	}
 }
 
@@ -477,6 +499,12 @@ func TestMempoolTxsError(t *testing.T) {
 	// Verify
 	if err == nil {
 		t.Fatal("Got nil where we expected error")
+	}
+	rerr := err.(gochroma.ChromaError)
+	wantErr := gochroma.ErrorCode(gochroma.ErrBlockRead)
+	if rerr.ErrorCode != wantErr {
+		t.Errorf("wrong error passed back: got %v, want %v",
+			rerr.ErrorCode, wantErr)
 	}
 }
 
@@ -545,9 +573,11 @@ func TestPublishRawTxError1(t *testing.T) {
 	if err == nil {
 		t.Fatal("Got nil where we expected error")
 	}
-	wantString := "unexpected EOF"
-	if !strings.Contains(err.Error(), wantString) {
-		t.Fatalf("Got the wrong error, got %v want something with %v", err.Error(), wantString)
+	rerr := err.(gochroma.ChromaError)
+	wantErr := gochroma.ErrorCode(gochroma.ErrInvalidTx)
+	if rerr.ErrorCode != wantErr {
+		t.Errorf("wrong error passed back: got %v, want %v",
+			rerr.ErrorCode, wantErr)
 	}
 }
 
@@ -578,8 +608,10 @@ func TestPublishRawTxError2(t *testing.T) {
 	if err == nil {
 		t.Fatal("Got nil where we expected error")
 	}
-	wantString := "invalid character"
-	if !strings.Contains(err.Error(), wantString) {
-		t.Fatalf("Got the wrong error, got %v want something with %v", err.Error(), wantString)
+	rerr := err.(gochroma.ChromaError)
+	wantErr := gochroma.ErrorCode(gochroma.ErrBlockWrite)
+	if rerr.ErrorCode != wantErr {
+		t.Errorf("wrong error passed back: got %v, want %v",
+			rerr.ErrorCode, wantErr)
 	}
 }

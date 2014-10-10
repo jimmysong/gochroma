@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"testing"
 
+	"github.com/conformal/btcutil"
 	"github.com/conformal/btcwire"
 	"github.com/jimmysong/gochroma"
 )
@@ -49,6 +50,12 @@ func TestLatestBlockError(t *testing.T) {
 	// Verify
 	if err == nil {
 		t.Fatal("Got nil where we expected error")
+	}
+	rerr := err.(gochroma.ChromaError)
+	wantErr := gochroma.ErrorCode(gochroma.ErrBlockRead)
+	if rerr.ErrorCode != wantErr {
+		t.Errorf("wrong error passed back: got %v, want %v",
+			rerr.ErrorCode, wantErr)
 	}
 }
 
@@ -115,6 +122,12 @@ func TestBlockAtHeightError(t *testing.T) {
 	// Verify
 	if err == nil {
 		t.Fatal("Got nil where we expected error")
+	}
+	rerr := err.(gochroma.ChromaError)
+	wantErr := gochroma.ErrorCode(gochroma.ErrBlockRead)
+	if rerr.ErrorCode != wantErr {
+		t.Errorf("wrong error passed back: got %v, want %v",
+			rerr.ErrorCode, wantErr)
 	}
 }
 
@@ -215,6 +228,79 @@ func TestTxError(t *testing.T) {
 	if err == nil {
 		t.Fatal("Got nil where we expected error")
 	}
+	rerr := err.(gochroma.ChromaError)
+	wantErr := gochroma.ErrorCode(gochroma.ErrBlockRead)
+	if rerr.ErrorCode != wantErr {
+		t.Errorf("wrong error passed back: got %v, want %v",
+			rerr.ErrorCode, wantErr)
+	}
+}
+
+func TestTxHeight(t *testing.T) {
+	// Setup
+	txHashStr := "1d235c4ea39e7f3151e784283319485f4b5eb92e553ee6d307c0201b4125e09f"
+	txHash, _ := hex.DecodeString(txHashStr)
+	blockHashStr := "00000000003583bc221e70c80ce8e3d67b49be70bb3b1fd6a191d2040babd3e8"
+	blockHash, _ := hex.DecodeString(blockHashStr)
+	bytesStr := "020000009153031afe12d843b71b2a8a64ba0c516630e5fe34ee0a228d4b0400000000003f38188e708f2af4973972100e29b221c3c7c703ce12ad4c42d469aaf8267f2cc2e12e54c0ff3f1b1cc2312f0101000000010000000000000000000000000000000000000000000000000000000000000000ffffffff2303057b04164b6e434d696e657242519dceb367fae996d0542ee1c200000000a0010000ffffffff0100f90295000000001976a9149e8985f82bc4e0f753d0492aa8d11cc39925774088ac00000000"
+	bytesWant, _ := hex.DecodeString(bytesStr)
+	blockReaderWriter := &TstBlockReaderWriter{
+		txBlockHash: [][]byte{blockHash},
+		block:       [][]byte{bytesWant},
+	}
+	b := &gochroma.BlockExplorer{blockReaderWriter}
+
+	// Execute
+	height, err := b.TxHeight(txHash)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Verify
+	heightWant := btcutil.BlockHeightUnknown
+	if height != heightWant {
+		t.Fatalf("Did not get height that we expected: got %d, want %d", height, heightWant)
+	}
+}
+
+func TestTxHeightError(t *testing.T) {
+	// Setup
+	blockReaderWriter := &TstBlockReaderWriter{}
+	b := &gochroma.BlockExplorer{blockReaderWriter}
+
+	// Execute
+	_, err := b.TxHeight([]byte{0x00})
+
+	// Verify
+	if err == nil {
+		t.Fatal("Got nil where we expected error")
+	}
+	rerr := err.(gochroma.ChromaError)
+	wantErr := gochroma.ErrorCode(gochroma.ErrBlockRead)
+	if rerr.ErrorCode != wantErr {
+		t.Errorf("wrong error passed back: got %v, want %v",
+			rerr.ErrorCode, wantErr)
+	}
+}
+
+func TestPreviousBlockError(t *testing.T) {
+	// Setup
+	blockReaderWriter := &TstBlockReaderWriter{}
+	b := &gochroma.BlockExplorer{blockReaderWriter}
+
+	// Execute
+	_, err := b.PreviousBlock([]byte{0x00})
+
+	// Verify
+	if err == nil {
+		t.Fatal("Got nil where we expected error")
+	}
+	rerr := err.(gochroma.ChromaError)
+	wantErr := gochroma.ErrorCode(gochroma.ErrBlockRead)
+	if rerr.ErrorCode != wantErr {
+		t.Errorf("wrong error passed back: got %v, want %v",
+			rerr.ErrorCode, wantErr)
+	}
 }
 
 func TestOutPointValue(t *testing.T) {
@@ -263,62 +349,10 @@ func TestOutPointValueError(t *testing.T) {
 	if err == nil {
 		t.Fatal("Got nil where we expected error")
 	}
-}
-
-func TestTxBlock(t *testing.T) {
-	// Setup
-	txHashStr := "1d235c4ea39e7f3151e784283319485f4b5eb92e553ee6d307c0201b4125e09f"
-	txHash, _ := hex.DecodeString(txHashStr)
-	blockHashStr := "00000000003583bc221e70c80ce8e3d67b49be70bb3b1fd6a191d2040babd3e8"
-	blockHash, _ := hex.DecodeString(blockHashStr)
-	bytesStr := "020000009153031afe12d843b71b2a8a64ba0c516630e5fe34ee0a228d4b0400000000003f38188e708f2af4973972100e29b221c3c7c703ce12ad4c42d469aaf8267f2cc2e12e54c0ff3f1b1cc2312f0101000000010000000000000000000000000000000000000000000000000000000000000000ffffffff2303057b04164b6e434d696e657242519dceb367fae996d0542ee1c200000000a0010000ffffffff0100f90295000000001976a9149e8985f82bc4e0f753d0492aa8d11cc39925774088ac00000000"
-	bytesWant, _ := hex.DecodeString(bytesStr)
-	blockReaderWriter := &TstBlockReaderWriter{
-		txBlockHash: [][]byte{blockHash},
-		block:       [][]byte{bytesWant},
-	}
-	b := &gochroma.BlockExplorer{blockReaderWriter}
-
-	// Execute
-	block, err := b.TxBlock(txHash)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Verify
-	bytesGot, err := block.Bytes()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if bytes.Compare(bytesGot, bytesWant) != 0 {
-		t.Fatalf("Did not get block that we expected: got %x, want %x", bytesGot, bytesWant)
-	}
-}
-
-func TestTxBlockError(t *testing.T) {
-	// Setup
-	blockReaderWriter := &TstBlockReaderWriter{}
-	b := &gochroma.BlockExplorer{blockReaderWriter}
-
-	// Execute
-	_, err := b.TxBlock([]byte{0x00})
-
-	// Verify
-	if err == nil {
-		t.Fatal("Got nil where we expected error")
-	}
-}
-
-func TestPreviousBlockError(t *testing.T) {
-	// Setup
-	blockReaderWriter := &TstBlockReaderWriter{}
-	b := &gochroma.BlockExplorer{blockReaderWriter}
-
-	// Execute
-	_, err := b.PreviousBlock([]byte{0x00})
-
-	// Verify
-	if err == nil {
-		t.Fatal("Got nil where we expected error")
+	rerr := err.(gochroma.ChromaError)
+	wantErr := gochroma.ErrorCode(gochroma.ErrBlockRead)
+	if rerr.ErrorCode != wantErr {
+		t.Errorf("wrong error passed back: got %v, want %v",
+			rerr.ErrorCode, wantErr)
 	}
 }

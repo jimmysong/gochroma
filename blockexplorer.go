@@ -89,17 +89,6 @@ func (b *BlockExplorer) Tx(hash []byte) (*btcutil.Tx, error) {
 	return btcutil.NewTxFromBytes(raw)
 }
 
-// OutPointValue returns how much many satoshis exist at this tx/index
-func (b *BlockExplorer) OutPointValue(outpoint *btcwire.OutPoint) (int64, error) {
-	tx, err := b.Tx(outpoint.Hash.Bytes())
-	if err != nil {
-		return -1, err
-	}
-	out := tx.MsgTx().TxOut[outpoint.Index]
-
-	return out.Value, nil
-}
-
 // TxBlock returns the *btcutil.Block struct of the transaction identified by
 // the byte-slice hash.
 func (b *BlockExplorer) TxBlock(txHash []byte) (*btcutil.Block, error) {
@@ -117,4 +106,18 @@ func (b *BlockExplorer) TxHeight(txHash []byte) (int64, error) {
 		return -1, err
 	}
 	return block.Height(), nil
+}
+
+// OutPointValue returns how much many satoshis exist at this tx/index
+func (b *BlockExplorer) OutPointValue(outpoint *btcwire.OutPoint) (int64, error) {
+	tx, err := b.OutPointTx(outpoint)
+	if err != nil {
+		return -1, err
+	}
+	return tx.MsgTx().TxOut[outpoint.Index].Value, nil
+}
+
+// OutPointTx returns the transaction the outpoint points to
+func (b *BlockExplorer) OutPointTx(outpoint *btcwire.OutPoint) (*btcutil.Tx, error) {
+	return b.Tx(outpoint.Hash.Bytes())
 }

@@ -6,6 +6,10 @@ import (
 
 const (
 	ErrUnimplemented = iota
+	ErrConnect
+	ErrBlockRead
+	ErrBlockWrite
+	ErrInvalidHash
 	ErrInvalidTx
 	ErrTooMuchColorValue
 	ErrTooManyOutputs
@@ -25,6 +29,10 @@ type ErrorCode int
 
 var errCodeStrings = map[ErrorCode]string{
 	ErrUnimplemented:          "unimplemented",
+	ErrConnect:                "unable to connect to blockchain source",
+	ErrBlockRead:              "unable to read from blockchain source",
+	ErrBlockWrite:             "unable to write to blockchain source",
+	ErrInvalidHash:            "hash looks wrong",
 	ErrInvalidTx:              "transaction is invalid",
 	ErrTooMuchColorValue:      "too much color value",
 	ErrTooManyOutputs:         "too many outputs",
