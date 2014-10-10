@@ -21,7 +21,7 @@ func (k IFOC) Code() string {
 func (k IFOC) getChange(b *BlockExplorer, inputs []*btcwire.OutPoint, fee int64) (*int64, error) {
 	sum := int64(0)
 	for _, input := range inputs {
-		value, err := b.GetOutPointValue(input)
+		value, err := b.OutPointValue(input)
 		if err != nil {
 			str := fmt.Sprintf("input %v got errors", input)
 			return nil, makeError(ErrInvalidTx, str, err)

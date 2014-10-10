@@ -9,7 +9,7 @@ import (
 	"github.com/jimmysong/gochroma"
 )
 
-func TestGetLatestBlock(t *testing.T) {
+func TestLatestBlock(t *testing.T) {
 	// Setup
 	hashStr := "00000000003583bc221e70c80ce8e3d67b49be70bb3b1fd6a191d2040babd3e8"
 	hash, _ := hex.DecodeString(hashStr)
@@ -23,7 +23,7 @@ func TestGetLatestBlock(t *testing.T) {
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 
 	// Execute
-	block, err := b.GetLatestBlock()
+	block, err := b.LatestBlock()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,13 +38,13 @@ func TestGetLatestBlock(t *testing.T) {
 	}
 }
 
-func TestGetLatestBlockError(t *testing.T) {
+func TestLatestBlockError(t *testing.T) {
 	// Setup
 	blockReaderWriter := &TstBlockReaderWriter{}
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 
 	// Execute
-	_, err := b.GetLatestBlock()
+	_, err := b.LatestBlock()
 
 	// Verify
 	if err == nil {
@@ -52,7 +52,7 @@ func TestGetLatestBlockError(t *testing.T) {
 	}
 }
 
-func TestGetRawBlockAtHeight(t *testing.T) {
+func TestRawBlockAtHeight(t *testing.T) {
 	// Setup
 	hashStr := "00000000003583bc221e70c80ce8e3d67b49be70bb3b1fd6a191d2040babd3e8"
 	hash, _ := hex.DecodeString(hashStr)
@@ -65,7 +65,7 @@ func TestGetRawBlockAtHeight(t *testing.T) {
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 
 	// Execute
-	bytesGot, err := b.GetRawBlockAtHeight(1)
+	bytesGot, err := b.RawBlockAtHeight(1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -76,7 +76,7 @@ func TestGetRawBlockAtHeight(t *testing.T) {
 	}
 }
 
-func TestGetBlockAtHeight(t *testing.T) {
+func TestBlockAtHeight(t *testing.T) {
 	// Setup
 	hashStr := "00000000003583bc221e70c80ce8e3d67b49be70bb3b1fd6a191d2040babd3e8"
 	hash, _ := hex.DecodeString(hashStr)
@@ -89,7 +89,7 @@ func TestGetBlockAtHeight(t *testing.T) {
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 
 	// Execute
-	block, err := b.GetBlockAtHeight(1)
+	block, err := b.BlockAtHeight(1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -104,13 +104,13 @@ func TestGetBlockAtHeight(t *testing.T) {
 	}
 }
 
-func TestGetBlockAtHeightError(t *testing.T) {
+func TestBlockAtHeightError(t *testing.T) {
 	// Setup
 	blockReaderWriter := &TstBlockReaderWriter{}
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 
 	// Execute
-	_, err := b.GetBlockAtHeight(1)
+	_, err := b.BlockAtHeight(1)
 
 	// Verify
 	if err == nil {
@@ -118,7 +118,7 @@ func TestGetBlockAtHeightError(t *testing.T) {
 	}
 }
 
-func TestGetBlock(t *testing.T) {
+func TestBlock(t *testing.T) {
 	// Setup
 	hashStr := "00000000003583bc221e70c80ce8e3d67b49be70bb3b1fd6a191d2040babd3e8"
 	hash, _ := hex.DecodeString(hashStr)
@@ -131,7 +131,7 @@ func TestGetBlock(t *testing.T) {
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 
 	// Execute
-	block, err := b.GetBlock(hash)
+	block, err := b.Block(hash)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -146,7 +146,7 @@ func TestGetBlock(t *testing.T) {
 	}
 }
 
-func TestGetPreviousBlock(t *testing.T) {
+func TestPreviousBlock(t *testing.T) {
 	// Setup
 	hashStr := "00000000003583bc221e70c80ce8e3d67b49be70bb3b1fd6a191d2040babd3e8"
 	hash, _ := hex.DecodeString(hashStr)
@@ -160,7 +160,7 @@ func TestGetPreviousBlock(t *testing.T) {
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 
 	// Execute
-	block, err := b.GetPreviousBlock(hash)
+	block, err := b.PreviousBlock(hash)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -175,7 +175,7 @@ func TestGetPreviousBlock(t *testing.T) {
 	}
 }
 
-func TestGetTx(t *testing.T) {
+func TestTx(t *testing.T) {
 	// Setup
 	hashStr := "1d235c4ea39e7f3151e784283319485f4b5eb92e553ee6d307c0201b4125e09f"
 	hash, _ := hex.DecodeString(hashStr)
@@ -187,7 +187,7 @@ func TestGetTx(t *testing.T) {
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 
 	// Execute
-	tx, err := b.GetTx(hash)
+	tx, err := b.Tx(hash)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -203,13 +203,13 @@ func TestGetTx(t *testing.T) {
 	}
 }
 
-func TestGetTxError(t *testing.T) {
+func TestTxError(t *testing.T) {
 	// Setup
 	blockReaderWriter := &TstBlockReaderWriter{}
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 
 	// Execute
-	_, err := b.GetTx([]byte{0x00})
+	_, err := b.Tx([]byte{0x00})
 
 	// Verify
 	if err == nil {
@@ -217,7 +217,7 @@ func TestGetTxError(t *testing.T) {
 	}
 }
 
-func TestGetOutPointValue(t *testing.T) {
+func TestOutPointValue(t *testing.T) {
 	// Setup
 	bytesStr := "0100000001aa570d9d285fe85030361b9704068b80bea89e49ad26079c2ecca8a555f8bbb8010000006c493046022100b09a37ead2637d8ffdbe2fb896a74a1c9e2f01ce306b24def2688cb7810ae609022100c019910aaf0a3317d4555441580bc5a5de6f7851d86e81aa854fef38debfefbc0121037843af5cf98718f57d6887f01d7b30bd0c6ed915eb6648ee30889861bd3a7feaffffffff0200e1f505000000001976a9149bbd3b6b3da61901454a9e3c0a22ac6c626cc0fa88ac32f8196f000000001976a9144d273d3a2ce1824d1c6db0764eebb03f368fd9af88ac00000000"
 	bytesWant, _ := hex.DecodeString(bytesStr)
@@ -233,7 +233,7 @@ func TestGetOutPointValue(t *testing.T) {
 	outPoint := btcwire.NewOutPoint(shaHash, 0)
 
 	// Execute
-	value, err := b.GetOutPointValue(outPoint)
+	value, err := b.OutPointValue(outPoint)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -245,7 +245,7 @@ func TestGetOutPointValue(t *testing.T) {
 	}
 }
 
-func TestGetOutPointValueError(t *testing.T) {
+func TestOutPointValueError(t *testing.T) {
 	// Setup
 	blockReaderWriter := &TstBlockReaderWriter{}
 	b := &gochroma.BlockExplorer{blockReaderWriter}
@@ -257,7 +257,7 @@ func TestGetOutPointValueError(t *testing.T) {
 	outPoint := btcwire.NewOutPoint(shaHash, 0)
 
 	// Execute
-	_, err = b.GetOutPointValue(outPoint)
+	_, err = b.OutPointValue(outPoint)
 
 	// Verify
 	if err == nil {
@@ -265,7 +265,7 @@ func TestGetOutPointValueError(t *testing.T) {
 	}
 }
 
-func TestGetTxBlock(t *testing.T) {
+func TestTxBlock(t *testing.T) {
 	// Setup
 	txHashStr := "1d235c4ea39e7f3151e784283319485f4b5eb92e553ee6d307c0201b4125e09f"
 	txHash, _ := hex.DecodeString(txHashStr)
@@ -280,7 +280,7 @@ func TestGetTxBlock(t *testing.T) {
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 
 	// Execute
-	block, err := b.GetTxBlock(txHash)
+	block, err := b.TxBlock(txHash)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -295,13 +295,13 @@ func TestGetTxBlock(t *testing.T) {
 	}
 }
 
-func TestGetTxBlockError(t *testing.T) {
+func TestTxBlockError(t *testing.T) {
 	// Setup
 	blockReaderWriter := &TstBlockReaderWriter{}
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 
 	// Execute
-	_, err := b.GetTxBlock([]byte{0x00})
+	_, err := b.TxBlock([]byte{0x00})
 
 	// Verify
 	if err == nil {
@@ -309,13 +309,13 @@ func TestGetTxBlockError(t *testing.T) {
 	}
 }
 
-func TestGetPreviousBlockError(t *testing.T) {
+func TestPreviousBlockError(t *testing.T) {
 	// Setup
 	blockReaderWriter := &TstBlockReaderWriter{}
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 
 	// Execute
-	_, err := b.GetPreviousBlock([]byte{0x00})
+	_, err := b.PreviousBlock([]byte{0x00})
 
 	// Verify
 	if err == nil {

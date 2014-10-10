@@ -30,13 +30,13 @@ func NewBtcdBlockExplorer(net *btcnet.Params, connConfig *btcrpcclient.ConnConfi
 	}}, nil
 }
 
-// GetBlockCount returns the height of the newest block.
-func (b *btcdBlockReaderWriter) GetBlockCount() (int64, error) {
+// BlockCount returns the height of the newest block.
+func (b *btcdBlockReaderWriter) BlockCount() (int64, error) {
 	return b.Client.GetBlockCount()
 }
 
-// GetBlockHash returns the byte-slice hash of the block at height given.
-func (b *btcdBlockReaderWriter) GetBlockHash(height int64) ([]byte, error) {
+// BlockHash returns the byte-slice hash of the block at height given.
+func (b *btcdBlockReaderWriter) BlockHash(height int64) ([]byte, error) {
 	hash, err := b.Client.GetBlockHash(height)
 	if err != nil {
 		return nil, err
@@ -44,9 +44,9 @@ func (b *btcdBlockReaderWriter) GetBlockHash(height int64) ([]byte, error) {
 	return hash.Bytes(), nil
 }
 
-// GetRawBlock returns the raw byte-slice of the block identified by the
+// RawBlock returns the raw byte-slice of the block identified by the
 // byte-slice hash.
-func (b *btcdBlockReaderWriter) GetRawBlock(hash []byte) ([]byte, error) {
+func (b *btcdBlockReaderWriter) RawBlock(hash []byte) ([]byte, error) {
 	shaHash, err := btcwire.NewShaHash(hash)
 	if err != nil {
 		return nil, err
@@ -60,9 +60,9 @@ func (b *btcdBlockReaderWriter) GetRawBlock(hash []byte) ([]byte, error) {
 	return block.Bytes()
 }
 
-// GetRawTx returns the raw byte-slice of the hash identified by the
+// RawTx returns the raw byte-slice of the hash identified by the
 // byte-slice hash.
-func (b *btcdBlockReaderWriter) GetRawTx(hash []byte) ([]byte, error) {
+func (b *btcdBlockReaderWriter) RawTx(hash []byte) ([]byte, error) {
 	shaHash, err := btcwire.NewShaHash(hash)
 	if err != nil {
 		return nil, err
@@ -80,9 +80,9 @@ func (b *btcdBlockReaderWriter) GetRawTx(hash []byte) ([]byte, error) {
 	return ret.Bytes(), nil
 }
 
-// GetTxBlockHash returns the byte-slice block hash identified by the
+// TxBlockHash returns the byte-slice block hash identified by the
 // byte-slice transaction hash.
-func (b *btcdBlockReaderWriter) GetTxBlockHash(txHash []byte) ([]byte, error) {
+func (b *btcdBlockReaderWriter) TxBlockHash(txHash []byte) ([]byte, error) {
 	shaHash, err := btcwire.NewShaHash(txHash)
 	if err != nil {
 		return nil, err
@@ -94,8 +94,8 @@ func (b *btcdBlockReaderWriter) GetTxBlockHash(txHash []byte) ([]byte, error) {
 	return hex.DecodeString(txRawResult.BlockHash)
 }
 
-// GetMempoolTxs returns the list of transaction hashes in the mempool.
-func (b *btcdBlockReaderWriter) GetMempoolTxs() ([][]byte, error) {
+// MempoolTxs returns the list of transaction hashes in the mempool.
+func (b *btcdBlockReaderWriter) MempoolTxs() ([][]byte, error) {
 	txs, err := b.Client.GetRawMempool()
 	if err != nil {
 		return nil, err
@@ -107,9 +107,9 @@ func (b *btcdBlockReaderWriter) GetMempoolTxs() ([][]byte, error) {
 	return ret, nil
 }
 
-// SendRawTx sends the transaction to the blockchain and returns the byte-slice
-// transaction id/hash.
-func (b *btcdBlockReaderWriter) SendRawTx(hash []byte) ([]byte, error) {
+// PublishRawTx sends the transaction to the blockchain and returns
+// the byte-slice transaction id/hash.
+func (b *btcdBlockReaderWriter) PublishRawTx(hash []byte) ([]byte, error) {
 	tx, err := btcutil.NewTxFromBytes(hash)
 	if err != nil {
 		return nil, err

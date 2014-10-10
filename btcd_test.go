@@ -31,7 +31,7 @@ func TestNewBtcdBlockExplorerError(t *testing.T) {
 	}
 }
 
-func TestGetBlockCount(t *testing.T) {
+func TestBlockCount(t *testing.T) {
 	// Setup
 	countWant := int64(47834)
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -52,7 +52,7 @@ func TestGetBlockCount(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Execute
-	count, err := b.GetBlockCount()
+	count, err := b.BlockCount()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -62,7 +62,7 @@ func TestGetBlockCount(t *testing.T) {
 	}
 }
 
-func TestGetBlockHash(t *testing.T) {
+func TestBlockHash(t *testing.T) {
 	// Setup
 	hashStr := "00000000003583bc221e70c80ce8e3d67b49be70bb3b1fd6a191d2040babd3e8"
 	hashWant, _ := hex.DecodeString(hashStr)
@@ -89,7 +89,7 @@ func TestGetBlockHash(t *testing.T) {
 	}
 
 	// Execute
-	hash, err := b.GetBlockHash(1)
+	hash, err := b.BlockHash(1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -100,7 +100,7 @@ func TestGetBlockHash(t *testing.T) {
 	}
 }
 
-func TestGetBlockHashError(t *testing.T) {
+func TestBlockHashError(t *testing.T) {
 	// Setup
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		response := fmt.Sprintf("nonsense")
@@ -119,7 +119,7 @@ func TestGetBlockHashError(t *testing.T) {
 	}
 
 	// Execute
-	_, err = b.GetBlockHash(1)
+	_, err = b.BlockHash(1)
 
 	// Verify
 	if err == nil {
@@ -127,7 +127,7 @@ func TestGetBlockHashError(t *testing.T) {
 	}
 }
 
-func TestGetRawBlock(t *testing.T) {
+func TestRawBlock(t *testing.T) {
 	// Setup
 	hashStr := "00000000003583bc221e70c80ce8e3d67b49be70bb3b1fd6a191d2040babd3e8"
 	hash, _ := hex.DecodeString(hashStr)
@@ -150,7 +150,7 @@ func TestGetRawBlock(t *testing.T) {
 	}
 
 	// Execute
-	bytesGot, err := b.GetRawBlock(hash)
+	bytesGot, err := b.RawBlock(hash)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -161,7 +161,7 @@ func TestGetRawBlock(t *testing.T) {
 	}
 }
 
-func TestGetRawBlockError1(t *testing.T) {
+func TestRawBlockError1(t *testing.T) {
 	// Setup
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "")
@@ -179,7 +179,7 @@ func TestGetRawBlockError1(t *testing.T) {
 	}
 
 	// Execute
-	_, err = b.GetRawBlock([]byte{0x00})
+	_, err = b.RawBlock([]byte{0x00})
 
 	// Verify
 	if err == nil {
@@ -191,7 +191,7 @@ func TestGetRawBlockError1(t *testing.T) {
 	}
 }
 
-func TestGetRawBlockError2(t *testing.T) {
+func TestRawBlockError2(t *testing.T) {
 	// Setup
 	hashStr := "00000000003583bc221e70c80ce8e3d67b49be70bb3b1fd6a191d2040babd3e8"
 	hash, _ := hex.DecodeString(hashStr)
@@ -211,7 +211,7 @@ func TestGetRawBlockError2(t *testing.T) {
 	}
 
 	// Execute
-	_, err = b.GetRawBlock(hash)
+	_, err = b.RawBlock(hash)
 
 	// Verify
 	if err == nil {
@@ -223,7 +223,7 @@ func TestGetRawBlockError2(t *testing.T) {
 	}
 }
 
-func TestGetRawTx(t *testing.T) {
+func TestRawTx(t *testing.T) {
 	// Setup
 	hashStr := "1d235c4ea39e7f3151e784283319485f4b5eb92e553ee6d307c0201b4125e09f"
 	hash, _ := hex.DecodeString(hashStr)
@@ -246,7 +246,7 @@ func TestGetRawTx(t *testing.T) {
 	}
 
 	// Execute
-	bytesGot, err := b.GetRawTx(hash)
+	bytesGot, err := b.RawTx(hash)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -257,7 +257,7 @@ func TestGetRawTx(t *testing.T) {
 	}
 }
 
-func TestGetRawTxError1(t *testing.T) {
+func TestRawTxError1(t *testing.T) {
 	// Setup
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "")
@@ -275,7 +275,7 @@ func TestGetRawTxError1(t *testing.T) {
 	}
 
 	// Execute
-	_, err = b.GetRawTx([]byte{0x00})
+	_, err = b.RawTx([]byte{0x00})
 
 	// Verify
 	if err == nil {
@@ -287,7 +287,7 @@ func TestGetRawTxError1(t *testing.T) {
 	}
 }
 
-func TestGetRawTxError2(t *testing.T) {
+func TestRawTxError2(t *testing.T) {
 	// Setup
 	hashStr := "1d235c4ea39e7f3151e784283319485f4b5eb92e553ee6d307c0201b4125e09f"
 	hash, _ := hex.DecodeString(hashStr)
@@ -307,7 +307,7 @@ func TestGetRawTxError2(t *testing.T) {
 	}
 
 	// Execute
-	_, err = b.GetRawTx(hash)
+	_, err = b.RawTx(hash)
 
 	// Verify
 	if err == nil {
@@ -319,7 +319,7 @@ func TestGetRawTxError2(t *testing.T) {
 	}
 }
 
-func TestGetTxBlockHash(t *testing.T) {
+func TestTxBlockHash(t *testing.T) {
 	// Setup
 	txHashStr := "1d235c4ea39e7f3151e784283319485f4b5eb92e553ee6d307c0201b4125e09f"
 	txHash, _ := hex.DecodeString(txHashStr)
@@ -342,7 +342,7 @@ func TestGetTxBlockHash(t *testing.T) {
 	}
 
 	// Execute
-	blockHashGot, err := b.GetTxBlockHash(txHash)
+	blockHashGot, err := b.TxBlockHash(txHash)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -353,7 +353,7 @@ func TestGetTxBlockHash(t *testing.T) {
 	}
 }
 
-func TestGetTxBlockHashError2(t *testing.T) {
+func TestTxBlockHashError2(t *testing.T) {
 	txHashStr := "1d235c4ea39e7f3151e784283319485f4b5eb92e553ee6d307c0201b4125e09f"
 	txHash, _ := hex.DecodeString(txHashStr)
 	// Setup
@@ -373,7 +373,7 @@ func TestGetTxBlockHashError2(t *testing.T) {
 	}
 
 	// Execute
-	_, err = b.GetTxBlockHash(txHash)
+	_, err = b.TxBlockHash(txHash)
 
 	// Verify
 	if err == nil {
@@ -385,7 +385,7 @@ func TestGetTxBlockHashError2(t *testing.T) {
 	}
 }
 
-func TestGetTxBlockHashError1(t *testing.T) {
+func TestTxBlockHashError1(t *testing.T) {
 	// Setup
 	txHashStr := "00"
 	txHash, _ := hex.DecodeString(txHashStr)
@@ -405,7 +405,7 @@ func TestGetTxBlockHashError1(t *testing.T) {
 	}
 
 	// Execute
-	_, err = b.GetTxBlockHash(txHash)
+	_, err = b.TxBlockHash(txHash)
 
 	// Verify
 	if err == nil {
@@ -417,7 +417,7 @@ func TestGetTxBlockHashError1(t *testing.T) {
 	}
 }
 
-func TestGetMempoolTxs(t *testing.T) {
+func TestMempoolTxs(t *testing.T) {
 	// Setup
 	hashStr := "1d235c4ea39e7f3151e784283319485f4b5eb92e553ee6d307c0201b4125e09f"
 	hashWant, _ := hex.DecodeString(hashStr)
@@ -443,7 +443,7 @@ func TestGetMempoolTxs(t *testing.T) {
 	}
 
 	// Execute
-	mempoolTxs, err := b.GetMempoolTxs()
+	mempoolTxs, err := b.MempoolTxs()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -454,7 +454,7 @@ func TestGetMempoolTxs(t *testing.T) {
 	}
 }
 
-func TestGetMempoolTxsError(t *testing.T) {
+func TestMempoolTxsError(t *testing.T) {
 	// Setup
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "nonsense")
@@ -472,7 +472,7 @@ func TestGetMempoolTxsError(t *testing.T) {
 	}
 
 	// Execute
-	_, err = b.GetMempoolTxs()
+	_, err = b.MempoolTxs()
 
 	// Verify
 	if err == nil {
@@ -480,7 +480,7 @@ func TestGetMempoolTxsError(t *testing.T) {
 	}
 }
 
-func TestSendRawTx(t *testing.T) {
+func TestPublishRawTx(t *testing.T) {
 	// Setup
 	hashStr := "1d235c4ea39e7f3151e784283319485f4b5eb92e553ee6d307c0201b4125e09f"
 	hashWant, _ := hex.DecodeString(hashStr)
@@ -508,7 +508,7 @@ func TestSendRawTx(t *testing.T) {
 	}
 
 	// Execute
-	hashGot, err := b.SendRawTx(bytesToSend)
+	hashGot, err := b.PublishRawTx(bytesToSend)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -519,7 +519,7 @@ func TestSendRawTx(t *testing.T) {
 	}
 }
 
-func TestSendRawTxError1(t *testing.T) {
+func TestPublishRawTxError1(t *testing.T) {
 	// Setup
 	bytesStr := "01"
 	bytesToSend, _ := hex.DecodeString(bytesStr)
@@ -539,7 +539,7 @@ func TestSendRawTxError1(t *testing.T) {
 	}
 
 	// Execute
-	_, err = b.SendRawTx(bytesToSend)
+	_, err = b.PublishRawTx(bytesToSend)
 
 	// Verify
 	if err == nil {
@@ -551,7 +551,7 @@ func TestSendRawTxError1(t *testing.T) {
 	}
 }
 
-func TestSendRawTxError2(t *testing.T) {
+func TestPublishRawTxError2(t *testing.T) {
 	// Setup
 	bytesStr := "0100000001aa570d9d285fe85030361b9704068b80bea89e49ad26079c2ecca8a555f8bbb8010000006c493046022100b09a37ead2637d8ffdbe2fb896a74a1c9e2f01ce306b24def2688cb7810ae609022100c019910aaf0a3317d4555441580bc5a5de6f7851d86e81aa854fef38debfefbc0121037843af5cf98718f57d6887f01d7b30bd0c6ed915eb6648ee30889861bd3a7feaffffffff0200e1f505000000001976a9149bbd3b6b3da61901454a9e3c0a22ac6c626cc0fa88ac32f8196f000000001976a9144d273d3a2ce1824d1c6db0764eebb03f368fd9af88ac00000000"
 	bytesToSend, _ := hex.DecodeString(bytesStr)
@@ -572,7 +572,7 @@ func TestSendRawTxError2(t *testing.T) {
 	}
 
 	// Execute
-	_, err = b.SendRawTx(bytesToSend)
+	_, err = b.PublishRawTx(bytesToSend)
 
 	// Verify
 	if err == nil {
