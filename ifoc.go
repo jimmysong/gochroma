@@ -21,6 +21,16 @@ func (k IFOC) Code() string {
 func (k IFOC) getChange(b *BlockExplorer, inputs []*btcwire.OutPoint, fee int64) (*int64, error) {
 	sum := int64(0)
 	for _, input := range inputs {
+		// return an error if this input has been spent already
+		spent, err := b.OutPointSpent(input)
+		if err != nil {
+			return nil, err
+		}
+		if *spent {
+			str := fmt.Sprintf("outpoint at %v has been spent already", input)
+			return nil, MakeError(ErrOutPointSpent, str, nil)
+		}
+
 		value, err := b.OutPointValue(input)
 		if err != nil {
 			return nil, err
@@ -63,13 +73,24 @@ func (k IFOC) checkOutputs(outputs []*ColorOut, destroy bool) error {
 
 func (k IFOC) OutPointToColorIn(b *BlockExplorer,
 	genesis, outPoint *btcwire.OutPoint) (*ColorIn, error) {
-	value, err := b.OutPointValue(outPoint)
-	if err != nil {
-		return nil, err
-	}
+
 	colorIn := &ColorIn{
 		OutPoint:   outPoint,
 		ColorValue: ColorValue(0),
+	}
+
+	// check if this outPoint hasn't been spent already
+	spent, err := b.OutPointSpent(outPoint)
+	if err != nil {
+		return nil, err
+	}
+	if *spent {
+		return colorIn, nil
+	}
+
+	value, err := b.OutPointValue(outPoint)
+	if err != nil {
+		return nil, err
 	}
 	// If the outpoint isn't the right amount, we can assume 0
 	if value != k.TransferAmount {

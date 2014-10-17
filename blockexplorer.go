@@ -8,19 +8,21 @@ import (
 // BlockReaderWriter is any place where we can get raw blockchain data
 // and publish raw blockchain data.
 type BlockReaderWriter interface {
-	// Get the current block height
+	// Get the current block height.
 	BlockCount() (int64, error)
-	// Get the hash of the block with index
+	// Get the hash of the block with index.
 	BlockHash(index int64) ([]byte, error)
-	// Get the actual block with a given hash
+	// Get the actual block with a given hash.
 	RawBlock(hash []byte) ([]byte, error)
-	// Get the raw transaction given a hash
+	// Get the raw transaction given a hash.
 	RawTx(hash []byte) ([]byte, error)
-	// Get all the raw transactions in the mempool
+	// Get all the raw transactions in the mempool.
 	MempoolTxs() ([][]byte, error)
-	// Get the block hash that contains the tx identified by the tx hash
+	// Get the block hash that contains the tx identified by the tx hash.
 	TxBlockHash(txHash []byte) ([]byte, error)
-	// Publish a raw transaction
+	// Get whether a transaction output is spent or not.
+	TxOutSpent(txHash []byte, index uint32, mempool bool) (*bool, error)
+	// Publish a raw transaction.
 	PublishRawTx(rawTx []byte) ([]byte, error)
 }
 
@@ -125,4 +127,10 @@ func (b *BlockExplorer) OutPointTx(outpoint *btcwire.OutPoint) (*btcutil.Tx, err
 // OutPointTx returns the transaction the outpoint points to
 func (b *BlockExplorer) OutPointHeight(outpoint *btcwire.OutPoint) (int64, error) {
 	return b.TxHeight(outpoint.Hash.Bytes())
+}
+
+// OutPointSpent returns a pointer to a boolean expressing whether the outpoint
+// has been spent or not.
+func (b *BlockExplorer) OutPointSpent(outpoint *btcwire.OutPoint) (*bool, error) {
+	return b.TxOutSpent(outpoint.Hash.Bytes(), outpoint.Index, true)
 }

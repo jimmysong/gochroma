@@ -22,6 +22,7 @@ const (
 	ErrNegativeValue
 	ErrInsufficientColorValue
 	ErrDestroyColorValue
+	ErrOutPointSpent
 	ErrUnknownKernel
 )
 
@@ -45,6 +46,7 @@ var errCodeStrings = map[ErrorCode]string{
 	ErrNegativeValue:          "bitcoin amounts cannot be negative",
 	ErrInsufficientColorValue: "color funds are insufficient to complete this tx",
 	ErrDestroyColorValue:      "color funds are being destroyed",
+	ErrOutPointSpent:          "tx outpoint has been spent already",
 	ErrUnknownKernel:          "unknown kernel",
 }
 

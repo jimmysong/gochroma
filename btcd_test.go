@@ -508,6 +508,97 @@ func TestMempoolTxsError(t *testing.T) {
 	}
 }
 
+// TestTxOutSpent tests whether a transaction out (aka outpoint) has been
+// spent or not. For this test, the response is "null" which corresponds
+// to the txout having been spent, hence, true.
+func TestTxOutSpent(t *testing.T) {
+	// Setup
+	hashStr := "1d235c4ea39e7f3151e784283319485f4b5eb92e553ee6d307c0201b4125e09f"
+	hash, _ := hex.DecodeString(hashStr)
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Reply with "null" which is equivalent to the transaction having
+		// been spent already.
+		response := fmt.Sprintf("{\"result\": null ,\"error\":null,\"id\":1}")
+		fmt.Fprintln(w, response)
+	}))
+	defer ts.Close()
+	net := &btcnet.TestNet3Params
+	connConfig := &btcrpcclient.ConnConfig{
+		Host:         ts.URL[7:],
+		HttpPostMode: true,
+		DisableTLS:   true,
+	}
+	b, err := gochroma.NewBtcdBlockExplorer(net, connConfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Execute
+	spent, err := b.TxOutSpent(hash, 0, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Verify
+	if !*spent {
+		t.Fatalf("Did not get back what we expected: want true, got %v", *spent)
+	}
+}
+
+// TestTxOutSpentError tests the error conditions for TxOutSpent.
+func TestTxOutSpentError(t *testing.T) {
+	tests := []struct {
+		desc    string
+		hashStr string
+		err     int
+	}{
+		{
+			desc:    "BlockReaderWriter error",
+			hashStr: "1d235c4ea39e7f3151e784283319485f4b5eb92e553ee6d307c0201b4125e09f",
+			err:     gochroma.ErrBlockRead,
+		},
+		{
+			desc:    "Invalid hash input",
+			hashStr: "1d",
+			err:     gochroma.ErrInvalidHash,
+		},
+	}
+
+	for _, test := range tests {
+
+		// Setup
+		hash, _ := hex.DecodeString(test.hashStr)
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintln(w, "nonsense")
+		}))
+		defer ts.Close()
+		net := &btcnet.TestNet3Params
+		connConfig := &btcrpcclient.ConnConfig{
+			Host:         ts.URL[7:],
+			HttpPostMode: true,
+			DisableTLS:   true,
+		}
+		b, err := gochroma.NewBtcdBlockExplorer(net, connConfig)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// Execute
+		_, err = b.TxOutSpent(hash, 0, true)
+
+		// Verify
+		if err == nil {
+			t.Fatal("%v: Got nil where we expected error", test.desc)
+		}
+		rerr := err.(gochroma.ChromaError)
+		wantErr := gochroma.ErrorCode(test.err)
+		if rerr.ErrorCode != wantErr {
+			t.Errorf("%v, wrong error passed back: got %v, want %v",
+				test.desc, rerr.ErrorCode, wantErr)
+		}
+	}
+}
+
 func TestPublishRawTx(t *testing.T) {
 	// Setup
 	hashStr := "1d235c4ea39e7f3151e784283319485f4b5eb92e553ee6d307c0201b4125e09f"
