@@ -117,6 +117,27 @@ func (b *btcdBlockReaderWriter) MempoolTxs() ([][]byte, error) {
 	return ret, nil
 }
 
+// TxOutSpent returns a pointer to a boolean about whether an outpoint
+// has been spent or not.
+func (b *btcdBlockReaderWriter) TxOutSpent(hash []byte,
+	index uint32, mempool bool) (*bool, error) {
+	shaHash, err := btcwire.NewShaHash(hash)
+	if err != nil {
+		str := fmt.Sprintf("hash %x looks bad", hash)
+		return nil, MakeError(ErrInvalidHash, str, err)
+	}
+
+	txOutInfo, err := b.Client.GetTxOut(shaHash, int(index), mempool)
+	if err != nil {
+		str := fmt.Sprintf("failed to get tx out info %x", hash)
+		return nil, MakeError(ErrBlockRead, str, err)
+	}
+
+	spent := txOutInfo == nil
+
+	return &spent, nil
+}
+
 // PublishRawTx sends the transaction to the blockchain and returns
 // the byte-slice transaction id/hash.
 func (b *btcdBlockReaderWriter) PublishRawTx(hash []byte) ([]byte, error) {

@@ -14,6 +14,7 @@ type TstBlockReaderWriter struct {
 	rawTx       [][]byte
 	txBlockHash [][]byte
 	mempoolTxs  [][][]byte
+	txOutSpents []bool
 	sendHash    [][]byte
 }
 
@@ -70,6 +71,15 @@ func (b *TstBlockReaderWriter) MempoolTxs() ([][]byte, error) {
 	ret := b.mempoolTxs[0]
 	b.mempoolTxs = b.mempoolTxs[1:]
 	return ret, nil
+}
+
+func (b *TstBlockReaderWriter) TxOutSpent(_ []byte, _ uint32, _ bool) (*bool, error) {
+	if len(b.txOutSpents) == 0 {
+		return nil, gochroma.MakeError(gochroma.ErrBlockRead, "TxOutSpent Error", nil)
+	}
+	ret := b.txOutSpents[0]
+	b.txOutSpents = b.txOutSpents[1:]
+	return &ret, nil
 }
 
 func (b *TstBlockReaderWriter) PublishRawTx(_ []byte) ([]byte, error) {
