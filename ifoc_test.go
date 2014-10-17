@@ -3,6 +3,7 @@ package gochroma_test
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"testing"
 
 	"github.com/conformal/btcutil"
@@ -13,7 +14,7 @@ import (
 var (
 	key = "IFOC"
 
-	genesisBytes = "01000000011a932892802d8e1657bdc84feb3663a38ea64c33b0f5436606309d6f610a01fd000000006b483045022100d1fdca93b2074caf8fe329babe0472d381721384f183566cdf7ea34e8522df3402203e0176301ef6a192bccf94ae1c5ed50df67e1ff2227fb35b6da6adafbcc1321901210277d7813a44ee7325b9cdffd22e9b0f44ad3b5b0433cc69853c21cc7e6ebeb503ffffffff0210270000000000001976a914143caef14f63625b633b77dedac55f9deaedae6088acf0908800000000001976a9147d83495938585f3f9e01cfb2137f94b0f0f2ce2588ac00000000"
+	genesisTxBytesStr = "01000000011a932892802d8e1657bdc84feb3663a38ea64c33b0f5436606309d6f610a01fd000000006b483045022100d1fdca93b2074caf8fe329babe0472d381721384f183566cdf7ea34e8522df3402203e0176301ef6a192bccf94ae1c5ed50df67e1ff2227fb35b6da6adafbcc1321901210277d7813a44ee7325b9cdffd22e9b0f44ad3b5b0433cc69853c21cc7e6ebeb503ffffffff0210270000000000001976a914143caef14f63625b633b77dedac55f9deaedae6088acf0908800000000001976a9147d83495938585f3f9e01cfb2137f94b0f0f2ce2588ac00000000"
 
 	txBlockHashStr = "00000000003583bc221e70c80ce8e3d67b49be70bb3b1fd6a191d2040babd3e8"
 
@@ -25,6 +26,44 @@ var (
 
 	bytesWrongAmount = "0100000001aa570d9d285fe85030361b9704068b80bea89e49ad26079c2ecca8a555f8bbb8010000006c493046022100b09a37ead2637d8ffdbe2fb896a74a1c9e2f01ce306b24def2688cb7810ae609022100c019910aaf0a3317d4555441580bc5a5de6f7851d86e81aa854fef38debfefbc0121037843af5cf98718f57d6887f01d7b30bd0c6ed915eb6648ee30889861bd3a7feaffffffff0211270000000000001976a9149bbd3b6b3da61901454a9e3c0a22ac6c626cc0fa88ac32f8196f000000001976a9144d273d3a2ce1824d1c6db0764eebb03f368fd9af88ac00000000"
 )
+
+var (
+	rawTx       [][]byte
+	txBlockHash [][]byte
+	block       [][]byte
+)
+
+func init() {
+	txBytesList := []string{
+		genesisTxBytesStr, genesisTxBytesStr, genesisTxBytesStr}
+	var err error
+	rawTx, err = strSliceToByteSliceSlice(txBytesList)
+	if err != nil {
+		fmt.Errorf("failed to convert string to bytes :%v\n", err)
+	}
+	txBlockList := []string{txBlockHashStr, txBlockHashStr}
+	txBlockHash, err = strSliceToByteSliceSlice(txBlockList)
+	if err != nil {
+		fmt.Errorf("failed to convert string to bytes: %v\n", err)
+	}
+	blockBytesList := []string{blockBytesStr, blockBytesStr}
+	block, err = strSliceToByteSliceSlice(blockBytesList)
+	if err != nil {
+		fmt.Errorf("failed to convert string to bytes: %v", err)
+	}
+}
+
+func strSliceToByteSliceSlice(strList []string) ([][]byte, error) {
+	result := make([][]byte, len(strList))
+	for i, str := range strList {
+		bytes, err := hex.DecodeString(str)
+		if err != nil {
+			return nil, err
+		}
+		result[i] = bytes
+	}
+	return result, nil
+}
 
 func TestCode(t *testing.T) {
 	// Setup
@@ -46,33 +85,6 @@ func TestColorInsValid(t *testing.T) {
 	ifoc, err := gochroma.GetColorKernel(key)
 	if err != nil {
 		t.Fatalf("error getting ifoc kernel: %v", err)
-	}
-	txBytesList := []string{genesisBytes, genesisBytes, genesisBytes}
-	rawTx := make([][]byte, len(txBytesList))
-	for i, str := range txBytesList {
-		bytes, err := hex.DecodeString(str)
-		if err != nil {
-			t.Fatalf("failed to convert string to bytes")
-		}
-		rawTx[i] = bytes
-	}
-	txBlockList := []string{txBlockHashStr, txBlockHashStr}
-	txBlockHash := make([][]byte, len(txBlockList))
-	for i, str := range txBlockList {
-		bytes, err := hex.DecodeString(str)
-		if err != nil {
-			t.Fatalf("failed to convert string to bytes")
-		}
-		txBlockHash[i] = bytes
-	}
-	blockBytesList := []string{blockBytesStr, blockBytesStr}
-	block := make([][]byte, len(blockBytesList))
-	for i, str := range blockBytesList {
-		bytes, err := hex.DecodeString(str)
-		if err != nil {
-			t.Fatalf("failed to convert string to bytes")
-		}
-		block[i] = bytes
 	}
 	blockReaderWriter := &TstBlockReaderWriter{
 		txBlockHash: txBlockHash,
@@ -102,34 +114,6 @@ func TestOutPointToColorIn(t *testing.T) {
 	ifoc, err := gochroma.GetColorKernel(key)
 	if err != nil {
 		t.Fatalf("error getting ifoc kernel: %v", err)
-	}
-
-	txBytesList := []string{genesisBytes, genesisBytes, genesisBytes}
-	rawTx := make([][]byte, len(txBytesList))
-	for i, str := range txBytesList {
-		bytes, err := hex.DecodeString(str)
-		if err != nil {
-			t.Fatalf("failed to convert string to bytes")
-		}
-		rawTx[i] = bytes
-	}
-	txBlockList := []string{txBlockHashStr, txBlockHashStr}
-	txBlockHash := make([][]byte, len(txBlockList))
-	for i, str := range txBlockList {
-		bytes, err := hex.DecodeString(str)
-		if err != nil {
-			t.Fatalf("failed to convert string to bytes")
-		}
-		txBlockHash[i] = bytes
-	}
-	blockBytesList := []string{blockBytesStr, blockBytesStr}
-	block := make([][]byte, len(blockBytesList))
-	for i, str := range blockBytesList {
-		bytes, err := hex.DecodeString(str)
-		if err != nil {
-			t.Fatalf("failed to convert string to bytes")
-		}
-		block[i] = bytes
 	}
 	blockReaderWriter := &TstBlockReaderWriter{
 		txBlockHash: txBlockHash,
