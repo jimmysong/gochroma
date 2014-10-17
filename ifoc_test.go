@@ -28,6 +28,65 @@ func TestCode(t *testing.T) {
 	}
 }
 
+func TestColorInsValid(t *testing.T) {
+	ifoc, err := gochroma.GetColorKernel(key)
+	if err != nil {
+		t.Fatalf("error getting ifoc kernel: %v", err)
+	}
+
+	genesisBytes := "01000000011a932892802d8e1657bdc84feb3663a38ea64c33b0f5436606309d6f610a01fd000000006b483045022100d1fdca93b2074caf8fe329babe0472d381721384f183566cdf7ea34e8522df3402203e0176301ef6a192bccf94ae1c5ed50df67e1ff2227fb35b6da6adafbcc1321901210277d7813a44ee7325b9cdffd22e9b0f44ad3b5b0433cc69853c21cc7e6ebeb503ffffffff0210270000000000001976a914143caef14f63625b633b77dedac55f9deaedae6088acf0908800000000001976a9147d83495938585f3f9e01cfb2137f94b0f0f2ce2588ac00000000"
+	txBytesList := []string{genesisBytes, genesisBytes, genesisBytes}
+	rawTx := make([][]byte, len(txBytesList))
+	for i, str := range txBytesList {
+		bytes, err := hex.DecodeString(str)
+		if err != nil {
+			t.Fatalf("failed to convert string to bytes")
+		}
+		rawTx[i] = bytes
+	}
+	txBlockHashStr := "00000000003583bc221e70c80ce8e3d67b49be70bb3b1fd6a191d2040babd3e8"
+	txBlockList := []string{txBlockHashStr, txBlockHashStr}
+	txBlockHash := make([][]byte, len(txBlockList))
+	for i, str := range txBlockList {
+		bytes, err := hex.DecodeString(str)
+		if err != nil {
+			t.Fatalf("failed to convert string to bytes")
+		}
+		txBlockHash[i] = bytes
+	}
+	blockBytesStr := "020000009153031afe12d843b71b2a8a64ba0c516630e5fe34ee0a228d4b0400000000003f38188e708f2af4973972100e29b221c3c7c703ce12ad4c42d469aaf8267f2cc2e12e54c0ff3f1b1cc2312f0101000000010000000000000000000000000000000000000000000000000000000000000000ffffffff2303057b04164b6e434d696e657242519dceb367fae996d0542ee1c200000000a0010000ffffffff0100f90295000000001976a9149e8985f82bc4e0f753d0492aa8d11cc39925774088ac00000000"
+	blockBytesList := []string{blockBytesStr, blockBytesStr}
+	block := make([][]byte, len(blockBytesList))
+	for i, str := range blockBytesList {
+		bytes, err := hex.DecodeString(str)
+		if err != nil {
+			t.Fatalf("failed to convert string to bytes")
+		}
+		block[i] = bytes
+	}
+	blockReaderWriter := &TstBlockReaderWriter{
+		txBlockHash: txBlockHash,
+		block:       block,
+		rawTx:       rawTx,
+	}
+	b := &gochroma.BlockExplorer{blockReaderWriter}
+	tx, err := btcutil.NewTxFromBytes(rawTx[0])
+	if err != nil {
+		t.Fatalf("failed to get tx %v", err)
+	}
+	genesis := &tx.MsgTx().TxIn[0].PreviousOutPoint
+	outPoint := btcwire.NewOutPoint(tx.Sha(), 0)
+	colorIn := gochroma.ColorIn{outPoint, gochroma.ColorValue(1)}
+	colorIns := []*gochroma.ColorIn{&colorIn}
+	verify, err := ifoc.ColorInsValid(b, genesis, colorIns)
+	if err != nil {
+		t.Fatalf("failed with %v", err)
+	}
+	if verify == false {
+		t.Fatalf("failed to verify: %v", colorIns)
+	}
+}
+
 func TestOutPointToColorIn(t *testing.T) {
 	// Setup
 	ifoc, err := gochroma.GetColorKernel(key)
