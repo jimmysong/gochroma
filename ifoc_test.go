@@ -96,11 +96,10 @@ func TestColorInsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to get tx %v", err)
 	}
-	genesis := &tx.MsgTx().TxIn[0].PreviousOutPoint
 	outPoint := btcwire.NewOutPoint(tx.Sha(), 0)
 	colorIn := gochroma.ColorIn{outPoint, gochroma.ColorValue(1)}
 	colorIns := []*gochroma.ColorIn{&colorIn}
-	verify, err := ifoc.ColorInsValid(b, genesis, colorIns)
+	verify, err := ifoc.ColorInsValid(b, outPoint, colorIns)
 	if err != nil {
 		t.Fatalf("failed with %v", err)
 	}
