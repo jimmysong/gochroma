@@ -60,7 +60,7 @@ func RegisterColorKernel(kernel ColorKernel) error {
 	if ok {
 		// this is a duplicate
 		str := fmt.Sprintf("%v is already a registered kernel", key)
-		return makeError(ErrDuplicateKernel, str, nil)
+		return MakeError(ErrDuplicateKernel, str, nil)
 	}
 	kernelMap[key] = kernel
 	return nil
@@ -70,7 +70,7 @@ func GetColorKernel(key string) (ColorKernel, error) {
 	kernel, ok := kernelMap[key]
 	if !ok {
 		str := fmt.Sprintf("%v is not a registered kernel", key)
-		return nil, makeError(ErrNonExistentKernel, str, nil)
+		return nil, MakeError(ErrNonExistentKernel, str, nil)
 	}
 	return kernel, nil
 }
@@ -107,7 +107,7 @@ func NewColorDefinitionFromStr(cdString string) (*ColorDefinition, error) {
 
 	components := strings.Split(cdString, ":")
 	if len(components) != 4 {
-		return nil, makeError(ErrBadColorDefinition, "color definition should have 4 components", nil)
+		return nil, MakeError(ErrBadColorDefinition, "color definition should have 4 components", nil)
 	}
 	kernel, err := GetColorKernel(components[0])
 	if err != nil {
@@ -115,20 +115,20 @@ func NewColorDefinitionFromStr(cdString string) (*ColorDefinition, error) {
 	}
 	shaHash, err := btcwire.NewShaHashFromStr(components[1])
 	if err != nil {
-		return nil, makeError(ErrInvalidTx, "hash is invalid", err)
+		return nil, MakeError(ErrInvalidTx, "hash is invalid", err)
 	}
 	index, err := strconv.Atoi(components[2])
 	if err != nil {
-		return nil, makeError(ErrInvalidTx, "index is invalid", err)
+		return nil, MakeError(ErrInvalidTx, "index is invalid", err)
 	}
 	genesis := btcwire.NewOutPoint(shaHash, uint32(index))
 
 	height, err := strconv.Atoi(components[3])
 	if err != nil {
-		return nil, makeError(ErrInvalidTx, "height is invalid", err)
+		return nil, MakeError(ErrInvalidTx, "height is invalid", err)
 	}
 	if height <= 0 {
-		return nil, makeError(ErrInvalidTx, "height is negative", nil)
+		return nil, MakeError(ErrInvalidTx, "height is negative", nil)
 	}
 
 	// TODO: Grab an unused colorid

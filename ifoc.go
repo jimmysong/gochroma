@@ -30,7 +30,7 @@ func (k IFOC) getChange(b *BlockExplorer, inputs []*btcwire.OutPoint, fee int64)
 
 	if fee < 0 {
 		str := fmt.Sprintf("fee is negative: %d", fee)
-		return nil, makeError(ErrNegativeValue, str, nil)
+		return nil, MakeError(ErrNegativeValue, str, nil)
 	}
 
 	// add up all inputs in order and see if we have enough
@@ -38,7 +38,7 @@ func (k IFOC) getChange(b *BlockExplorer, inputs []*btcwire.OutPoint, fee int64)
 	if sum < amountNeeded {
 		str := fmt.Sprintf("have %d satoshi, need %d satoshi", sum,
 			amountNeeded)
-		return nil, makeError(ErrInsufficientFunds, str, nil)
+		return nil, MakeError(ErrInsufficientFunds, str, nil)
 	}
 	change := sum - amountNeeded
 	return &change, nil
@@ -47,15 +47,15 @@ func (k IFOC) getChange(b *BlockExplorer, inputs []*btcwire.OutPoint, fee int64)
 func (k IFOC) checkOutputs(outputs []*ColorOut, destroy bool) error {
 	if len(outputs) != 1 {
 		str := fmt.Sprintf("ifoc should have exactly 1 output: %d", len(outputs))
-		return makeError(ErrInvalidColorValue, str, nil)
+		return MakeError(ErrInvalidColorValue, str, nil)
 	}
 
 	if outputs[0].ColorValue > 1 {
-		return makeError(ErrInsufficientColorValue, "ifoc only should ever have 1 color value", nil)
+		return MakeError(ErrInsufficientColorValue, "ifoc only should ever have 1 color value", nil)
 	}
 
 	if !destroy && outputs[0].ColorValue < 1 {
-		return makeError(ErrDestroyColorValue, "destroying color value unintentionally", nil)
+		return MakeError(ErrDestroyColorValue, "destroying color value unintentionally", nil)
 	}
 
 	return nil
@@ -168,7 +168,7 @@ func (k IFOC) TransferringTx(b *BlockExplorer, inputs []*ColorIn,
 		inSum += input.ColorValue
 	}
 	if inSum != 1 {
-		return nil, makeError(ErrInvalidColorValue, "IFOC only supports exactly 1 color value", nil)
+		return nil, MakeError(ErrInvalidColorValue, "IFOC only supports exactly 1 color value", nil)
 	}
 	// check the color value
 	outSum := ColorValue(0)
@@ -176,7 +176,7 @@ func (k IFOC) TransferringTx(b *BlockExplorer, inputs []*ColorIn,
 		outSum += output.ColorValue
 	}
 	if outSum != 1 {
-		return nil, makeError(ErrInvalidColorValue, "IFOC only supports exactly 1 color value", nil)
+		return nil, MakeError(ErrInvalidColorValue, "IFOC only supports exactly 1 color value", nil)
 	}
 
 	// create the transaction
@@ -199,7 +199,7 @@ func (k IFOC) CalculateOutColorValues(genesis *btcwire.OutPoint, tx *btcwire.Msg
 	// handle case where the tx is the issuing tx
 	txShaHash, err := tx.TxSha()
 	if err != nil {
-		return nil, makeError(ErrInvalidTx, "transaction does not have a hash", err)
+		return nil, MakeError(ErrInvalidTx, "transaction does not have a hash", err)
 	}
 	if genesis.Hash.String() == txShaHash.String() {
 		outputs[genesis.Index] = ColorValue(1)
@@ -213,14 +213,14 @@ func (k IFOC) CalculateOutColorValues(genesis *btcwire.OutPoint, tx *btcwire.Msg
 	}
 	if sum > ColorValue(1) {
 		err := fmt.Sprintf("too much color value, should be 1, got %d", sum)
-		return nil, makeError(ErrTooMuchColorValue, err, nil)
+		return nil, MakeError(ErrTooMuchColorValue, err, nil)
 	} else if sum == 0 {
 		return outputs, nil
 	}
 
 	// check that the first input has the 1 color value
 	if inputs[0] != ColorValue(1) {
-		return nil, makeError(ErrInvalidColorValue, "First Input ColorValue is not 1", nil)
+		return nil, MakeError(ErrInvalidColorValue, "First Input ColorValue is not 1", nil)
 	}
 
 	// if the first tx output does not have the right transferring amount
@@ -237,7 +237,7 @@ func (k IFOC) FindAffectingInputs(b *BlockExplorer, genesis *btcwire.OutPoint, t
 	// handle case where the tx is the issuing tx
 	txShaHash, err := tx.TxSha()
 	if err != nil {
-		return nil, makeError(ErrInvalidTx, "transaction does not have a hash", err)
+		return nil, MakeError(ErrInvalidTx, "transaction does not have a hash", err)
 	}
 	if genesis.Hash.IsEqual(&txShaHash) {
 		return nil, nil
@@ -250,12 +250,12 @@ func (k IFOC) FindAffectingInputs(b *BlockExplorer, genesis *btcwire.OutPoint, t
 
 	// handle the case where there's more than one output
 	if len(outputs) > 1 {
-		return nil, makeError(ErrTooManyOutputs, "can't track back more than 1 output in IFOC", err)
+		return nil, MakeError(ErrTooManyOutputs, "can't track back more than 1 output in IFOC", err)
 	}
 
 	// handle the case where the output is not 0
 	if outputs[0] != 0 {
-		return nil, makeError(ErrBadOutputIndex, "can't track back any index other than 0", err)
+		return nil, MakeError(ErrBadOutputIndex, "can't track back any index other than 0", err)
 	}
 
 	// check that the right amount is in the first input
