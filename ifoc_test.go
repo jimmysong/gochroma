@@ -22,47 +22,59 @@ var (
 
 	bytesStr = "0100000001aa570d9d285fe85030361b9704068b80bea89e49ad26079c2ecca8a555f8bbb8010000006c493046022100b09a37ead2637d8ffdbe2fb896a74a1c9e2f01ce306b24def2688cb7810ae609022100c019910aaf0a3317d4555441580bc5a5de6f7851d86e81aa854fef38debfefbc0121037843af5cf98718f57d6887f01d7b30bd0c6ed915eb6648ee30889861bd3a7feaffffffff0200e1f505000000001976a9149bbd3b6b3da61901454a9e3c0a22ac6c626cc0fa88ac32f8196f000000001976a9144d273d3a2ce1824d1c6db0764eebb03f368fd9af88ac00000000"
 
-	bytesNormal = "0100000001aa570d9d285fe85030361b9704068b80bea89e49ad26079c2ecca8a555f8bbb8010000006c493046022100b09a37ead2637d8ffdbe2fb896a74a1c9e2f01ce306b24def2688cb7810ae609022100c019910aaf0a3317d4555441580bc5a5de6f7851d86e81aa854fef38debfefbc0121037843af5cf98718f57d6887f01d7b30bd0c6ed915eb6648ee30889861bd3a7feaffffffff0210270000000000001976a9149bbd3b6b3da61901454a9e3c0a22ac6c626cc0fa88ac32f8196f000000001976a9144d273d3a2ce1824d1c6db0764eebb03f368fd9af88ac00000000"
+	bytesNormalStr = "0100000001aa570d9d285fe85030361b9704068b80bea89e49ad26079c2ecca8a555f8bbb8010000006c493046022100b09a37ead2637d8ffdbe2fb896a74a1c9e2f01ce306b24def2688cb7810ae609022100c019910aaf0a3317d4555441580bc5a5de6f7851d86e81aa854fef38debfefbc0121037843af5cf98718f57d6887f01d7b30bd0c6ed915eb6648ee30889861bd3a7feaffffffff0210270000000000001976a9149bbd3b6b3da61901454a9e3c0a22ac6c626cc0fa88ac32f8196f000000001976a9144d273d3a2ce1824d1c6db0764eebb03f368fd9af88ac00000000"
 
-	bytesWrongAmount = "0100000001aa570d9d285fe85030361b9704068b80bea89e49ad26079c2ecca8a555f8bbb8010000006c493046022100b09a37ead2637d8ffdbe2fb896a74a1c9e2f01ce306b24def2688cb7810ae609022100c019910aaf0a3317d4555441580bc5a5de6f7851d86e81aa854fef38debfefbc0121037843af5cf98718f57d6887f01d7b30bd0c6ed915eb6648ee30889861bd3a7feaffffffff0211270000000000001976a9149bbd3b6b3da61901454a9e3c0a22ac6c626cc0fa88ac32f8196f000000001976a9144d273d3a2ce1824d1c6db0764eebb03f368fd9af88ac00000000"
+	bytesWrongAmountStr = "0100000001aa570d9d285fe85030361b9704068b80bea89e49ad26079c2ecca8a555f8bbb8010000006c493046022100b09a37ead2637d8ffdbe2fb896a74a1c9e2f01ce306b24def2688cb7810ae609022100c019910aaf0a3317d4555441580bc5a5de6f7851d86e81aa854fef38debfefbc0121037843af5cf98718f57d6887f01d7b30bd0c6ed915eb6648ee30889861bd3a7feaffffffff0211270000000000001976a9149bbd3b6b3da61901454a9e3c0a22ac6c626cc0fa88ac32f8196f000000001976a9144d273d3a2ce1824d1c6db0764eebb03f368fd9af88ac00000000"
 )
 
 var (
-	rawTx       [][]byte
-	txBlockHash [][]byte
-	block       [][]byte
+	rawTx            [][]byte
+	txBlockHash      [][]byte
+	block            [][]byte
+	bytesWant        [][]byte
+	bytesNormal      [][]byte
+	bytesWrongAmount [][]byte
 )
 
 func init() {
-	txBytesList := []string{
-		genesisTxBytesStr, genesisTxBytesStr, genesisTxBytesStr}
-	var err error
-	rawTx, err = strSliceToByteSliceSlice(txBytesList)
+	genesisTxBytes, err := hex.DecodeString(genesisTxBytesStr)
 	if err != nil {
 		fmt.Errorf("failed to convert string to bytes :%v\n", err)
 	}
-	txBlockList := []string{txBlockHashStr, txBlockHashStr}
-	txBlockHash, err = strSliceToByteSliceSlice(txBlockList)
+	rawTx = [][]byte{genesisTxBytes, genesisTxBytes, genesisTxBytes}
 	if err != nil {
-		fmt.Errorf("failed to convert string to bytes: %v\n", err)
+		fmt.Errorf("failed to convert string to bytes :%v\n", err)
 	}
-	blockBytesList := []string{blockBytesStr, blockBytesStr}
-	block, err = strSliceToByteSliceSlice(blockBytesList)
+
+	txBlockHashBytes, err := hex.DecodeString(txBlockHashStr)
+	if err != nil {
+		fmt.Errorf("failed to convert string to bytes :%v\n", err)
+	}
+	txBlockHash = [][]byte{txBlockHashBytes, txBlockHashBytes}
+
+	blockBytes, err := hex.DecodeString(blockBytesStr)
 	if err != nil {
 		fmt.Errorf("failed to convert string to bytes: %v", err)
 	}
-}
+	block = [][]byte{blockBytes, blockBytes}
 
-func strSliceToByteSliceSlice(strList []string) ([][]byte, error) {
-	result := make([][]byte, len(strList))
-	for i, str := range strList {
-		bytes, err := hex.DecodeString(str)
-		if err != nil {
-			return nil, err
-		}
-		result[i] = bytes
+	bw, err := hex.DecodeString(bytesStr)
+	if err != nil {
+		fmt.Errorf("failed to convert string to bytes: %v", err)
 	}
-	return result, nil
+	bytesWant = [][]byte{bw}
+
+	bn, err := hex.DecodeString(bytesNormalStr)
+	if err != nil {
+		fmt.Errorf("failed to convert string to bytes: %v", err)
+	}
+	bytesNormal = [][]byte{bn}
+
+	bwm, err := hex.DecodeString(bytesWrongAmountStr)
+	if err != nil {
+		fmt.Errorf("failed to convert string to bytes: %v", err)
+	}
+	bytesWrongAmount = [][]byte{bwm}
 }
 
 func TestCode(t *testing.T) {
@@ -147,9 +159,8 @@ func TestIssuingTx(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error getting ifoc kernel: %v", err)
 	}
-	bytesWant, _ := hex.DecodeString(bytesStr)
 	blockReaderWriter := &TstBlockReaderWriter{
-		rawTx: [][]byte{bytesWant},
+		rawTx: bytesWant,
 	}
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 	hashBytes := make([]byte, 32)
@@ -202,7 +213,7 @@ func TestIssuingTxError(t *testing.T) {
 	}
 	tests := []struct {
 		desc       string
-		bytes      []string
+		bytes      [][]byte
 		fee        int64
 		colorValue gochroma.ColorValue
 		colorOuts  int
@@ -210,7 +221,7 @@ func TestIssuingTxError(t *testing.T) {
 	}{
 		{
 			desc:       "block read error",
-			bytes:      []string{},
+			bytes:      [][]byte{},
 			fee:        100,
 			colorValue: gochroma.ColorValue(1),
 			colorOuts:  1,
@@ -218,7 +229,7 @@ func TestIssuingTxError(t *testing.T) {
 		},
 		{
 			desc:       "negative fee",
-			bytes:      []string{bytesStr},
+			bytes:      bytesWant,
 			fee:        -1,
 			colorValue: gochroma.ColorValue(1),
 			colorOuts:  1,
@@ -226,7 +237,7 @@ func TestIssuingTxError(t *testing.T) {
 		},
 		{
 			desc:       "insufficient funds",
-			bytes:      []string{bytesStr},
+			bytes:      bytesWant,
 			fee:        100000000,
 			colorValue: gochroma.ColorValue(1),
 			colorOuts:  1,
@@ -234,7 +245,7 @@ func TestIssuingTxError(t *testing.T) {
 		},
 		{
 			desc:       "too much color value",
-			bytes:      []string{bytesStr},
+			bytes:      bytesWant,
 			fee:        100,
 			colorValue: gochroma.ColorValue(2),
 			colorOuts:  1,
@@ -242,7 +253,7 @@ func TestIssuingTxError(t *testing.T) {
 		},
 		{
 			desc:       "too little color value",
-			bytes:      []string{bytesStr},
+			bytes:      bytesWant,
 			fee:        100,
 			colorValue: gochroma.ColorValue(0),
 			colorOuts:  1,
@@ -250,7 +261,7 @@ func TestIssuingTxError(t *testing.T) {
 		},
 		{
 			desc:       "multiple outputs",
-			bytes:      []string{bytesStr},
+			bytes:      bytesWant,
 			fee:        100,
 			colorValue: gochroma.ColorValue(1),
 			colorOuts:  2,
@@ -259,11 +270,7 @@ func TestIssuingTxError(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		rawTx := make([][]byte, len(test.bytes))
-		for i, str := range test.bytes {
-			bytes, _ := hex.DecodeString(str)
-			rawTx[i] = bytes
-		}
+		rawTx := test.bytes
 		blockReaderWriter := &TstBlockReaderWriter{
 			rawTx: rawTx,
 		}
@@ -311,9 +318,8 @@ func TestTransferringTx(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error getting ifoc kernel: %v", err)
 	}
-	bytesWant, _ := hex.DecodeString(bytesStr)
 	blockReaderWriter := &TstBlockReaderWriter{
-		rawTx: [][]byte{bytesWant},
+		rawTx: bytesWant,
 	}
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 	hashBytes := make([]byte, 32)
@@ -396,9 +402,8 @@ func TestTransferringTxError(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		bytesWant, _ := hex.DecodeString(bytesStr)
 		blockReaderWriter := &TstBlockReaderWriter{
-			rawTx: [][]byte{bytesWant},
+			rawTx: bytesWant,
 		}
 		b := &gochroma.BlockExplorer{blockReaderWriter}
 		hashBytes := make([]byte, 32)
@@ -722,7 +727,7 @@ func TestAffectingNil(t *testing.T) {
 func TestAffecting(t *testing.T) {
 	tests := []struct {
 		desc      string
-		bytes     string
+		bytes     [][]byte
 		numInputs int
 	}{
 		{
@@ -766,9 +771,8 @@ OUTER:
 		}
 		genesis := btcwire.NewOutPoint(genesisShaHash, 0)
 		outputs := []int{0}
-		bytesWant, _ := hex.DecodeString(test.bytes)
 		blockReaderWriter := &TstBlockReaderWriter{
-			rawTx: [][]byte{bytesWant},
+			rawTx: test.bytes,
 		}
 		b := &gochroma.BlockExplorer{blockReaderWriter}
 
