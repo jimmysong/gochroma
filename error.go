@@ -70,7 +70,7 @@ func (e ChromaError) Error() string {
 	return e.Description
 }
 
-func makeError(c ErrorCode, d string, e error) ChromaError {
+func MakeError(c ErrorCode, d string, e error) ChromaError {
 	return ChromaError{
 		ErrorCode:   c,
 		Description: d,
