@@ -102,6 +102,7 @@ func TestColorInsValid(t *testing.T) {
 		txBlockHash: txBlockHash,
 		block:       block,
 		rawTx:       rawTx,
+		txOutSpents: []bool{false},
 	}
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 	tx, err := btcutil.NewTxFromBytes(rawTx[0])
@@ -130,6 +131,7 @@ func TestOutPointToColorIn(t *testing.T) {
 		txBlockHash: txBlockHash,
 		block:       block,
 		rawTx:       rawTx,
+		txOutSpents: []bool{false},
 	}
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 	tx, err := btcutil.NewTxFromBytes(rawTx[0])
@@ -160,7 +162,8 @@ func TestIssuingTx(t *testing.T) {
 		t.Fatalf("error getting ifoc kernel: %v", err)
 	}
 	blockReaderWriter := &TstBlockReaderWriter{
-		rawTx: bytesWant,
+		rawTx:       bytesWant,
+		txOutSpents: []bool{false},
 	}
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 	hashBytes := make([]byte, 32)
@@ -217,6 +220,7 @@ func TestIssuingTxError(t *testing.T) {
 		fee        int64
 		colorValue gochroma.ColorValue
 		colorOuts  int
+		spents     []bool
 		err        int
 	}{
 		{
@@ -225,6 +229,7 @@ func TestIssuingTxError(t *testing.T) {
 			fee:        100,
 			colorValue: gochroma.ColorValue(1),
 			colorOuts:  1,
+			spents:     []bool{false},
 			err:        gochroma.ErrBlockRead,
 		},
 		{
@@ -233,6 +238,7 @@ func TestIssuingTxError(t *testing.T) {
 			fee:        -1,
 			colorValue: gochroma.ColorValue(1),
 			colorOuts:  1,
+			spents:     []bool{false},
 			err:        gochroma.ErrNegativeValue,
 		},
 		{
@@ -241,6 +247,7 @@ func TestIssuingTxError(t *testing.T) {
 			fee:        100000000,
 			colorValue: gochroma.ColorValue(1),
 			colorOuts:  1,
+			spents:     []bool{false},
 			err:        gochroma.ErrInsufficientFunds,
 		},
 		{
@@ -249,6 +256,7 @@ func TestIssuingTxError(t *testing.T) {
 			fee:        100,
 			colorValue: gochroma.ColorValue(2),
 			colorOuts:  1,
+			spents:     []bool{false},
 			err:        gochroma.ErrInsufficientColorValue,
 		},
 		{
@@ -257,6 +265,7 @@ func TestIssuingTxError(t *testing.T) {
 			fee:        100,
 			colorValue: gochroma.ColorValue(0),
 			colorOuts:  1,
+			spents:     []bool{false},
 			err:        gochroma.ErrDestroyColorValue,
 		},
 		{
@@ -265,14 +274,34 @@ func TestIssuingTxError(t *testing.T) {
 			fee:        100,
 			colorValue: gochroma.ColorValue(1),
 			colorOuts:  2,
+			spents:     []bool{false},
 			err:        gochroma.ErrInvalidColorValue,
+		},
+		{
+			desc:       "spent already",
+			bytes:      bytesWant,
+			fee:        100,
+			colorValue: gochroma.ColorValue(1),
+			colorOuts:  1,
+			spents:     []bool{true},
+			err:        gochroma.ErrOutPointSpent,
+		},
+		{
+			desc:       "error on spent retrieval",
+			bytes:      bytesWant,
+			fee:        100,
+			colorValue: gochroma.ColorValue(1),
+			colorOuts:  1,
+			spents:     nil,
+			err:        gochroma.ErrBlockRead,
 		},
 	}
 
 	for _, test := range tests {
 		rawTx := test.bytes
 		blockReaderWriter := &TstBlockReaderWriter{
-			rawTx: rawTx,
+			rawTx:       rawTx,
+			txOutSpents: test.spents,
 		}
 		b := &gochroma.BlockExplorer{blockReaderWriter}
 		hashBytes := make([]byte, 32)
@@ -319,7 +348,8 @@ func TestTransferringTx(t *testing.T) {
 		t.Fatalf("error getting ifoc kernel: %v", err)
 	}
 	blockReaderWriter := &TstBlockReaderWriter{
-		rawTx: bytesWant,
+		rawTx:       bytesWant,
+		txOutSpents: []bool{false},
 	}
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 	hashBytes := make([]byte, 32)
@@ -403,7 +433,8 @@ func TestTransferringTxError(t *testing.T) {
 
 	for _, test := range tests {
 		blockReaderWriter := &TstBlockReaderWriter{
-			rawTx: bytesWant,
+			rawTx:       bytesWant,
+			txOutSpents: []bool{false},
 		}
 		b := &gochroma.BlockExplorer{blockReaderWriter}
 		hashBytes := make([]byte, 32)
