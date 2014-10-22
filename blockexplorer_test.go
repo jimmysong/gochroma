@@ -2,7 +2,6 @@ package gochroma_test
 
 import (
 	"bytes"
-	"encoding/hex"
 	"testing"
 
 	"github.com/conformal/btcutil"
@@ -10,16 +9,15 @@ import (
 	"github.com/jimmysong/gochroma"
 )
 
+// NOTE: a lot of useful "constants" are defined in lib_test.go
+// these include: blockHash txHash errHash rawBlock rawTransaction
+
 func TestLatestBlock(t *testing.T) {
 	// Setup
-	hashStr := "00000000003583bc221e70c80ce8e3d67b49be70bb3b1fd6a191d2040babd3e8"
-	hash, _ := hex.DecodeString(hashStr)
-	bytesStr := "020000009153031afe12d843b71b2a8a64ba0c516630e5fe34ee0a228d4b0400000000003f38188e708f2af4973972100e29b221c3c7c703ce12ad4c42d469aaf8267f2cc2e12e54c0ff3f1b1cc2312f0101000000010000000000000000000000000000000000000000000000000000000000000000ffffffff2303057b04164b6e434d696e657242519dceb367fae996d0542ee1c200000000a0010000ffffffff0100f90295000000001976a9149e8985f82bc4e0f753d0492aa8d11cc39925774088ac00000000"
-	bytesWant, _ := hex.DecodeString(bytesStr)
 	blockReaderWriter := &TstBlockReaderWriter{
 		blockCount: []int64{1},
-		blockHash:  [][]byte{hash},
-		block:      [][]byte{bytesWant},
+		blockHash:  [][]byte{blockHash},
+		block:      [][]byte{rawBlock},
 	}
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 
@@ -34,8 +32,8 @@ func TestLatestBlock(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if bytes.Compare(bytesGot, bytesWant) != 0 {
-		t.Fatalf("Did not get block that we expected: got %x, want %x", bytesGot, bytesWant)
+	if bytes.Compare(bytesGot, rawBlock) != 0 {
+		t.Fatalf("Did not get block that we expected: got %x, want %x", bytesGot, rawBlock)
 	}
 }
 
@@ -61,13 +59,9 @@ func TestLatestBlockError(t *testing.T) {
 
 func TestRawBlockAtHeight(t *testing.T) {
 	// Setup
-	hashStr := "00000000003583bc221e70c80ce8e3d67b49be70bb3b1fd6a191d2040babd3e8"
-	hash, _ := hex.DecodeString(hashStr)
-	bytesStr := "020000009153031afe12d843b71b2a8a64ba0c516630e5fe34ee0a228d4b0400000000003f38188e708f2af4973972100e29b221c3c7c703ce12ad4c42d469aaf8267f2cc2e12e54c0ff3f1b1cc2312f0101000000010000000000000000000000000000000000000000000000000000000000000000ffffffff2303057b04164b6e434d696e657242519dceb367fae996d0542ee1c200000000a0010000ffffffff0100f90295000000001976a9149e8985f82bc4e0f753d0492aa8d11cc39925774088ac00000000"
-	bytesWant, _ := hex.DecodeString(bytesStr)
 	blockReaderWriter := &TstBlockReaderWriter{
-		blockHash: [][]byte{hash},
-		block:     [][]byte{bytesWant},
+		blockHash: [][]byte{blockHash},
+		block:     [][]byte{rawBlock},
 	}
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 
@@ -78,20 +72,16 @@ func TestRawBlockAtHeight(t *testing.T) {
 	}
 
 	// Verify
-	if bytes.Compare(bytesGot, bytesWant) != 0 {
-		t.Fatalf("Did not get block that we expected: got %x, want %x", bytesGot, bytesWant)
+	if bytes.Compare(bytesGot, rawBlock) != 0 {
+		t.Fatalf("Did not get block that we expected: got %x, want %x", bytesGot, rawBlock)
 	}
 }
 
 func TestBlockAtHeight(t *testing.T) {
 	// Setup
-	hashStr := "00000000003583bc221e70c80ce8e3d67b49be70bb3b1fd6a191d2040babd3e8"
-	hash, _ := hex.DecodeString(hashStr)
-	bytesStr := "020000009153031afe12d843b71b2a8a64ba0c516630e5fe34ee0a228d4b0400000000003f38188e708f2af4973972100e29b221c3c7c703ce12ad4c42d469aaf8267f2cc2e12e54c0ff3f1b1cc2312f0101000000010000000000000000000000000000000000000000000000000000000000000000ffffffff2303057b04164b6e434d696e657242519dceb367fae996d0542ee1c200000000a0010000ffffffff0100f90295000000001976a9149e8985f82bc4e0f753d0492aa8d11cc39925774088ac00000000"
-	bytesWant, _ := hex.DecodeString(bytesStr)
 	blockReaderWriter := &TstBlockReaderWriter{
-		blockHash: [][]byte{hash},
-		block:     [][]byte{bytesWant},
+		blockHash: [][]byte{blockHash},
+		block:     [][]byte{rawBlock},
 	}
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 
@@ -106,8 +96,8 @@ func TestBlockAtHeight(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if bytes.Compare(bytesGot, bytesWant) != 0 {
-		t.Fatalf("Did not get block that we expected: got %x, want %x", bytesGot, bytesWant)
+	if bytes.Compare(bytesGot, rawBlock) != 0 {
+		t.Fatalf("Did not get block that we expected: got %x, want %x", bytesGot, rawBlock)
 	}
 }
 
@@ -133,18 +123,14 @@ func TestBlockAtHeightError(t *testing.T) {
 
 func TestBlock(t *testing.T) {
 	// Setup
-	hashStr := "00000000003583bc221e70c80ce8e3d67b49be70bb3b1fd6a191d2040babd3e8"
-	hash, _ := hex.DecodeString(hashStr)
-	bytesStr := "020000009153031afe12d843b71b2a8a64ba0c516630e5fe34ee0a228d4b0400000000003f38188e708f2af4973972100e29b221c3c7c703ce12ad4c42d469aaf8267f2cc2e12e54c0ff3f1b1cc2312f0101000000010000000000000000000000000000000000000000000000000000000000000000ffffffff2303057b04164b6e434d696e657242519dceb367fae996d0542ee1c200000000a0010000ffffffff0100f90295000000001976a9149e8985f82bc4e0f753d0492aa8d11cc39925774088ac00000000"
-	bytesWant, _ := hex.DecodeString(bytesStr)
 	blockReaderWriter := &TstBlockReaderWriter{
-		block: [][]byte{bytesWant},
+		block: [][]byte{rawBlock},
 	}
 
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 
 	// Execute
-	block, err := b.Block(hash)
+	block, err := b.Block(blockHash)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -154,26 +140,19 @@ func TestBlock(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if bytes.Compare(bytesGot, bytesWant) != 0 {
-		t.Fatalf("Did not get block that we expected: got %x, want %x", bytesGot, bytesWant)
+	if bytes.Compare(bytesGot, rawBlock) != 0 {
+		t.Fatalf("Did not get block that we expected: got %x, want %x", bytesGot, rawBlock)
 	}
 }
 
 func TestPreviousBlock(t *testing.T) {
-	// Setup
-	hashStr := "00000000003583bc221e70c80ce8e3d67b49be70bb3b1fd6a191d2040babd3e8"
-	hash, _ := hex.DecodeString(hashStr)
-	bytesStr1 := "020000009153031afe12d843b71b2a8a64ba0c516630e5fe34ee0a228d4b0400000000003f38188e708f2af4973972100e29b221c3c7c703ce12ad4c42d469aaf8267f2cc2e12e54c0ff3f1b1cc2312f0101000000010000000000000000000000000000000000000000000000000000000000000000ffffffff2303057b04164b6e434d696e657242519dceb367fae996d0542ee1c200000000a0010000ffffffff0100f90295000000001976a9149e8985f82bc4e0f753d0492aa8d11cc39925774088ac00000000"
-	bytesCurrent, _ := hex.DecodeString(bytesStr1)
-	bytesStr2 := "020000000548c8eb8c91c25c598f7bcb7e3d2f2f14971836c5796bb1023d1d0000000000836b81f78a4421c6bf663353fba5cf2a53d8ee3f76e4f47e96784e1ab1f3803dbee12e54c0ff3f1b995ba51c0101000000010000000000000000000000000000000000000000000000000000000000000000ffffffff2503047b04184b6e434d696e657242519dceb367fae996d0542ee1be2b7d0000000009020000ffffffff0100f90295000000001976a9149e8985f82bc4e0f753d0492aa8d11cc39925774088ac00000000"
-	bytesWant, _ := hex.DecodeString(bytesStr2)
 	blockReaderWriter := &TstBlockReaderWriter{
-		block: [][]byte{bytesCurrent, bytesWant},
+		block: [][]byte{rawBlock, rawBlock2},
 	}
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 
 	// Execute
-	block, err := b.PreviousBlock(hash)
+	block, err := b.PreviousBlock(blockHash)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -183,24 +162,20 @@ func TestPreviousBlock(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if bytes.Compare(bytesGot, bytesWant) != 0 {
-		t.Fatalf("Did not get block that we expected: got %x, want %x", bytesGot, bytesWant)
+	if bytes.Compare(bytesGot, rawBlock2) != 0 {
+		t.Fatalf("Did not get block that we expected: got %x, want %x", bytesGot, rawBlock2)
 	}
 }
 
 func TestTx(t *testing.T) {
 	// Setup
-	hashStr := "1d235c4ea39e7f3151e784283319485f4b5eb92e553ee6d307c0201b4125e09f"
-	hash, _ := hex.DecodeString(hashStr)
-	bytesStr := "0100000001aa570d9d285fe85030361b9704068b80bea89e49ad26079c2ecca8a555f8bbb8010000006c493046022100b09a37ead2637d8ffdbe2fb896a74a1c9e2f01ce306b24def2688cb7810ae609022100c019910aaf0a3317d4555441580bc5a5de6f7851d86e81aa854fef38debfefbc0121037843af5cf98718f57d6887f01d7b30bd0c6ed915eb6648ee30889861bd3a7feaffffffff0200e1f505000000001976a9149bbd3b6b3da61901454a9e3c0a22ac6c626cc0fa88ac32f8196f000000001976a9144d273d3a2ce1824d1c6db0764eebb03f368fd9af88ac00000000"
-	bytesWant, _ := hex.DecodeString(bytesStr)
 	blockReaderWriter := &TstBlockReaderWriter{
-		rawTx: [][]byte{bytesWant},
+		rawTx: [][]byte{rawTransaction},
 	}
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 
 	// Execute
-	tx, err := b.Tx(hash)
+	tx, err := b.Tx(txHash)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -211,8 +186,8 @@ func TestTx(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if bytes.Compare(bytesGot.Bytes(), bytesWant) != 0 {
-		t.Fatalf("Did not get tx that we expected: got %x, want %x", bytesGot.Bytes(), bytesWant)
+	if bytes.Compare(bytesGot.Bytes(), rawTransaction) != 0 {
+		t.Fatalf("Did not get tx that we expected: got %x, want %x", bytesGot.Bytes(), rawTransaction)
 	}
 }
 
@@ -238,15 +213,9 @@ func TestTxError(t *testing.T) {
 
 func TestTxHeight(t *testing.T) {
 	// Setup
-	txHashStr := "1d235c4ea39e7f3151e784283319485f4b5eb92e553ee6d307c0201b4125e09f"
-	txHash, _ := hex.DecodeString(txHashStr)
-	blockHashStr := "00000000003583bc221e70c80ce8e3d67b49be70bb3b1fd6a191d2040babd3e8"
-	blockHash, _ := hex.DecodeString(blockHashStr)
-	bytesStr := "020000009153031afe12d843b71b2a8a64ba0c516630e5fe34ee0a228d4b0400000000003f38188e708f2af4973972100e29b221c3c7c703ce12ad4c42d469aaf8267f2cc2e12e54c0ff3f1b1cc2312f0101000000010000000000000000000000000000000000000000000000000000000000000000ffffffff2303057b04164b6e434d696e657242519dceb367fae996d0542ee1c200000000a0010000ffffffff0100f90295000000001976a9149e8985f82bc4e0f753d0492aa8d11cc39925774088ac00000000"
-	bytesWant, _ := hex.DecodeString(bytesStr)
 	blockReaderWriter := &TstBlockReaderWriter{
 		txBlockHash: [][]byte{blockHash},
-		block:       [][]byte{bytesWant},
+		block:       [][]byte{rawBlock},
 	}
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 
@@ -305,16 +274,13 @@ func TestPreviousBlockError(t *testing.T) {
 
 func TestOutPointValue(t *testing.T) {
 	// Setup
-	bytesStr := "0100000001aa570d9d285fe85030361b9704068b80bea89e49ad26079c2ecca8a555f8bbb8010000006c493046022100b09a37ead2637d8ffdbe2fb896a74a1c9e2f01ce306b24def2688cb7810ae609022100c019910aaf0a3317d4555441580bc5a5de6f7851d86e81aa854fef38debfefbc0121037843af5cf98718f57d6887f01d7b30bd0c6ed915eb6648ee30889861bd3a7feaffffffff0200e1f505000000001976a9149bbd3b6b3da61901454a9e3c0a22ac6c626cc0fa88ac32f8196f000000001976a9144d273d3a2ce1824d1c6db0764eebb03f368fd9af88ac00000000"
-	bytesWant, _ := hex.DecodeString(bytesStr)
 	blockReaderWriter := &TstBlockReaderWriter{
-		rawTx: [][]byte{bytesWant},
+		rawTx: [][]byte{rawTransaction},
 	}
 	b := &gochroma.BlockExplorer{blockReaderWriter}
-	hashStr := "1d235c4ea39e7f3151e784283319485f4b5eb92e553ee6d307c0201b4125e09f"
-	shaHash, err := btcwire.NewShaHashFromStr(hashStr)
+	shaHash, err := gochroma.NewShaHash(txHash)
 	if err != nil {
-		t.Fatalf("failed to convert hash %v: %v", hashStr, err)
+		t.Fatalf("failed to convert hash %v: %v", txHash, err)
 	}
 	outPoint := btcwire.NewOutPoint(shaHash, 0)
 
@@ -335,10 +301,9 @@ func TestOutPointValueError(t *testing.T) {
 	// Setup
 	blockReaderWriter := &TstBlockReaderWriter{}
 	b := &gochroma.BlockExplorer{blockReaderWriter}
-	hashStr := "1d235c4ea39e7f3151e784283319485f4b5eb92e553ee6d307c0201b4125e09f"
-	shaHash, err := btcwire.NewShaHashFromStr(hashStr)
+	shaHash, err := gochroma.NewShaHash(txHash)
 	if err != nil {
-		t.Fatalf("failed to convert hash %v: %v", hashStr, err)
+		t.Fatalf("failed to convert hash %v: %v", txHash, err)
 	}
 	outPoint := btcwire.NewOutPoint(shaHash, 0)
 
@@ -354,5 +319,29 @@ func TestOutPointValueError(t *testing.T) {
 	if rerr.ErrorCode != wantErr {
 		t.Errorf("wrong error passed back: got %v, want %v",
 			rerr.ErrorCode, wantErr)
+	}
+}
+
+func TestPublishTx(t *testing.T) {
+	// Setup
+	blockReaderWriter := &TstBlockReaderWriter{
+		sendHash: [][]byte{txHash},
+	}
+	b := &gochroma.BlockExplorer{blockReaderWriter}
+	tx, err := btcutil.NewTxFromBytes(rawTransaction)
+	if err != nil {
+		t.Fatalf("couldn't make tx: %v", err)
+	}
+
+	// Execute
+	shaHash, err := b.PublishTx(tx.MsgTx())
+	if err != nil {
+		t.Fatal(err)
+	}
+	hash := gochroma.BigEndianBytes(shaHash)
+
+	// Verify
+	if bytes.Compare(hash, txHash) != 0 {
+		t.Fatalf("Did not get hash we wanted: got %d, want %d", hash, txHash)
 	}
 }

@@ -1,6 +1,8 @@
 package gochroma
 
 import (
+	"bytes"
+
 	"github.com/conformal/btcutil"
 	"github.com/conformal/btcwire"
 )
@@ -121,16 +123,35 @@ func (b *BlockExplorer) OutPointValue(outpoint *btcwire.OutPoint) (int64, error)
 
 // OutPointTx returns the transaction the outpoint points to
 func (b *BlockExplorer) OutPointTx(outpoint *btcwire.OutPoint) (*btcutil.Tx, error) {
-	return b.Tx(outpoint.Hash.Bytes())
+	// outpoint is a shaHash, which means we have to change it to convert
+	// to big-endian
+	return b.Tx(BigEndianBytes(&outpoint.Hash))
 }
 
 // OutPointTx returns the transaction the outpoint points to
 func (b *BlockExplorer) OutPointHeight(outpoint *btcwire.OutPoint) (int64, error) {
-	return b.TxHeight(outpoint.Hash.Bytes())
+	// outpoint is a shaHash, which means we have to change it to convert
+	// to big-endian
+	return b.TxHeight(BigEndianBytes(&outpoint.Hash))
 }
 
 // OutPointSpent returns a pointer to a boolean expressing whether the outpoint
 // has been spent or not.
 func (b *BlockExplorer) OutPointSpent(outpoint *btcwire.OutPoint) (*bool, error) {
-	return b.TxOutSpent(outpoint.Hash.Bytes(), outpoint.Index, true)
+	return b.TxOutSpent(BigEndianBytes(&outpoint.Hash), outpoint.Index, true)
+}
+
+// PublishTx publishes the tx and then returns the shaHash of the tx.
+func (b *BlockExplorer) PublishTx(tx *btcwire.MsgTx) (*btcwire.ShaHash, error) {
+	var buffer bytes.Buffer
+	err := tx.Serialize(&buffer)
+	if err != nil {
+		return nil, MakeError(ErrInvalidTx, "unable to serialize: ", err)
+	}
+	serialized := buffer.Bytes()
+	txHash, err := b.PublishRawTx(serialized)
+	if err != nil {
+		return nil, err
+	}
+	return NewShaHash(txHash)
 }
