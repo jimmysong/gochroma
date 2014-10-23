@@ -8,8 +8,6 @@ import (
 	"github.com/monetas/btcwire"
 )
 
-type ColorId uint64
-
 type ColorValue uint64
 
 type ColorIn struct {
@@ -77,7 +75,6 @@ func GetColorKernel(key string) (ColorKernel, error) {
 
 type ColorDefinition struct {
 	ColorKernel
-	Id      ColorId
 	Genesis *btcwire.OutPoint
 	Height  int64
 }
@@ -103,10 +100,8 @@ func (c *ColorDefinition) ColorValue(b *BlockExplorer, outPoint *btcwire.OutPoin
 }
 
 func NewColorDefinition(kernel ColorKernel, genesis *btcwire.OutPoint, height int64) (*ColorDefinition, error) {
-	// TODO: Grab an unused colorid
-	colorId := ColorId(1)
 	return &ColorDefinition{
-		kernel, colorId, genesis, height,
+		kernel, genesis, height,
 	}, nil
 }
 
@@ -139,10 +134,7 @@ func NewColorDefinitionFromStr(cdString string) (*ColorDefinition, error) {
 		return nil, MakeError(ErrInvalidTx, "height is negative", nil)
 	}
 
-	// TODO: Grab an unused colorid
-	colorId := ColorId(1)
-
 	return &ColorDefinition{
-		kernel, colorId, genesis, int64(height),
+		kernel, genesis, int64(height),
 	}, nil
 }
