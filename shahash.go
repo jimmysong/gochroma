@@ -1,7 +1,7 @@
 package gochroma
 
 import (
-	"github.com/monetas/btcwire"
+	"github.com/conformal/btcwire"
 )
 
 // reverse simply reverses the bytes
