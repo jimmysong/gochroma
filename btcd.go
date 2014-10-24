@@ -8,7 +8,6 @@ import (
 	"github.com/monetas/btcnet"
 	"github.com/monetas/btcrpcclient"
 	"github.com/monetas/btcutil"
-	"github.com/monetas/btcwire"
 )
 
 // btcdBlockReaderWriter is a specific BlockReaderWriter that uses btcd in order
@@ -38,19 +37,21 @@ func (b *btcdBlockReaderWriter) BlockCount() (int64, error) {
 }
 
 // BlockHash returns the byte-slice hash of the block at height given.
+// Note the hash returned is in big-endian order.
 func (b *btcdBlockReaderWriter) BlockHash(height int64) ([]byte, error) {
 	hash, err := b.Client.GetBlockHash(height)
 	if err != nil {
 		str := fmt.Sprintf("failed to read at height %d", height)
 		return nil, MakeError(ErrBlockRead, str, err)
 	}
-	return hash.Bytes(), nil
+	return BigEndianBytes(hash), nil
 }
 
 // RawBlock returns the raw byte-slice of the block identified by the
 // byte-slice hash.
+// Note the hash should be in big-endian order.
 func (b *btcdBlockReaderWriter) RawBlock(hash []byte) ([]byte, error) {
-	shaHash, err := btcwire.NewShaHash(hash)
+	shaHash, err := NewShaHash(hash)
 	if err != nil {
 		str := fmt.Sprintf("hash %x looks bad", hash)
 		return nil, MakeError(ErrInvalidHash, str, err)
@@ -58,17 +59,18 @@ func (b *btcdBlockReaderWriter) RawBlock(hash []byte) ([]byte, error) {
 
 	block, err := b.Client.GetBlock(shaHash)
 	if err != nil {
-		str := fmt.Sprintf("failed to get block %x", hash)
+		str := fmt.Sprintf("failed to get block %v", shaHash)
 		return nil, MakeError(ErrBlockRead, str, err)
 	}
 
 	return block.Bytes()
 }
 
-// RawTx returns the raw byte-slice of the hash identified by the
+// RawTx returns the raw byte-slice of the transaction identified by the
 // byte-slice hash.
+// Note the tx hash should be in big-endian order.
 func (b *btcdBlockReaderWriter) RawTx(hash []byte) ([]byte, error) {
-	shaHash, err := btcwire.NewShaHash(hash)
+	shaHash, err := NewShaHash(hash)
 	if err != nil {
 		str := fmt.Sprintf("hash %x looks bad", hash)
 		return nil, MakeError(ErrInvalidHash, str, err)
@@ -89,8 +91,9 @@ func (b *btcdBlockReaderWriter) RawTx(hash []byte) ([]byte, error) {
 
 // TxBlockHash returns the byte-slice block hash identified by the
 // byte-slice transaction hash.
+// Note the tx hash should be in big-endian order.
 func (b *btcdBlockReaderWriter) TxBlockHash(txHash []byte) ([]byte, error) {
-	shaHash, err := btcwire.NewShaHash(txHash)
+	shaHash, err := NewShaHash(txHash)
 	if err != nil {
 		str := fmt.Sprintf("hash %x looks bad", txHash)
 		return nil, MakeError(ErrInvalidHash, str, err)
@@ -100,10 +103,16 @@ func (b *btcdBlockReaderWriter) TxBlockHash(txHash []byte) ([]byte, error) {
 		str := fmt.Sprintf("failed to get tx verbose %x", txHash)
 		return nil, MakeError(ErrBlockRead, str, err)
 	}
-	return hex.DecodeString(txRawResult.BlockHash)
+	ret, err := hex.DecodeString(txRawResult.BlockHash)
+	if err != nil {
+		str := fmt.Sprintf("failed decode %v", txRawResult.BlockHash)
+		return nil, MakeError(ErrInvalidHash, str, err)
+	}
+	return ret, nil
 }
 
 // MempoolTxs returns the list of transaction hashes in the mempool.
+// Note the tx hashes returned will be in big-endian order.
 func (b *btcdBlockReaderWriter) MempoolTxs() ([][]byte, error) {
 	txs, err := b.Client.GetRawMempool()
 	if err != nil {
@@ -112,16 +121,18 @@ func (b *btcdBlockReaderWriter) MempoolTxs() ([][]byte, error) {
 	}
 	ret := make([][]byte, len(txs))
 	for i, shaHash := range txs {
-		ret[i] = shaHash.Bytes()
+		// convert bytes to big-endian
+		ret[i] = BigEndianBytes(shaHash)
 	}
 	return ret, nil
 }
 
 // TxOutSpent returns a pointer to a boolean about whether an outpoint
 // has been spent or not.
+// Note the tx hash should be in big-endian order.
 func (b *btcdBlockReaderWriter) TxOutSpent(hash []byte,
 	index uint32, mempool bool) (*bool, error) {
-	shaHash, err := btcwire.NewShaHash(hash)
+	shaHash, err := NewShaHash(hash)
 	if err != nil {
 		str := fmt.Sprintf("hash %x looks bad", hash)
 		return nil, MakeError(ErrInvalidHash, str, err)
@@ -140,6 +151,7 @@ func (b *btcdBlockReaderWriter) TxOutSpent(hash []byte,
 
 // PublishRawTx sends the transaction to the blockchain and returns
 // the byte-slice transaction id/hash.
+// Note the tx hash returned will be in big-endian order.
 func (b *btcdBlockReaderWriter) PublishRawTx(hash []byte) ([]byte, error) {
 	tx, err := btcutil.NewTxFromBytes(hash)
 	if err != nil {
@@ -151,5 +163,6 @@ func (b *btcdBlockReaderWriter) PublishRawTx(hash []byte) ([]byte, error) {
 		str := fmt.Sprintf("failed to publish tx %x", hash)
 		return nil, MakeError(ErrBlockWrite, str, err)
 	}
-	return shaHash.Bytes(), nil
+	// convert bytes to big-endian
+	return BigEndianBytes(shaHash), nil
 }
