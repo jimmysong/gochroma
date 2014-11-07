@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"testing"
 	"time"
@@ -26,6 +25,7 @@ var (
 )
 
 func setUp() (*gochroma.BlockExplorer, *gochroma.Wallet, func(), error) {
+
 	// create some temporary files and directories on the system
 	systemTmp := os.TempDir()
 	walletTmp, err := ioutil.TempDir(systemTmp, "integration_test")
@@ -102,8 +102,8 @@ func setUp() (*gochroma.BlockExplorer, *gochroma.Wallet, func(), error) {
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 
 	tearDown := func() {
-		exec.Command("kill", string(btcd1.Process.Pid)).Output()
-		exec.Command("kill", string(btcd2.Process.Pid)).Output()
+		btcd1.Process.Kill()
+		btcd2.Process.Kill()
 		os.RemoveAll(walletTmp)
 	}
 
@@ -129,6 +129,12 @@ func TestCC(t *testing.T) {
 	_, err = wallet.NewUncoloredOutPoint(b, outPoint)
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	v, err := wallet.ColorBalance(gochroma.UncoloredColorId)
+	want := gochroma.ColorValue(5000000000)
+	if *v != want {
+		t.Fatalf("unexpected balance: want %d, got %d", want, *v)
 	}
 
 	// grab the kernel

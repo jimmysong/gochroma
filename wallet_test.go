@@ -322,7 +322,7 @@ func TestIssueColor(t *testing.T) {
 	}
 	defer wallet.Close()
 	blockReaderWriter := &TstBlockReaderWriter{
-		rawTx:       [][]byte{rawTransaction2, rawTransaction2, rawTransaction2, rawTransaction2},
+		rawTx:       [][]byte{rawTransaction2, rawTransaction2, rawTransaction2, rawTransaction2, rawTransaction2, rawTransaction2, rawTransaction2},
 		txOutSpents: []bool{false, false, false},
 		sendHash:    [][]byte{txHash},
 	}
@@ -422,7 +422,7 @@ func TestColorBalance(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = wallet.FetchOrAddDefinition(colorStr)
+	cid, err := wallet.FetchOrAddDefinition(colorStr)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -432,7 +432,7 @@ func TestColorBalance(t *testing.T) {
 	}
 
 	// execute
-	balance, err := wallet.ColorBalance(cd)
+	balance, err := wallet.ColorBalance(cid)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -458,8 +458,10 @@ func TestSend(t *testing.T) {
 	}
 	defer wallet.Close()
 	blockReaderWriter := &TstBlockReaderWriter{
-		rawTx:       [][]byte{rawTransaction2, rawTransaction2, rawTransaction2, rawTransaction2, rawTransaction2, rawTransaction2, rawTransaction2},
-		txOutSpents: []bool{false, false, false, false, false, false, false},
+		txBlockHash: txBlockHash,
+		block:       block,
+		rawTx:       [][]byte{rawTransaction2, rawTransaction2, rawTransaction2, rawTransaction3, rawTransaction3, rawTransaction3, rawTransaction3, rawTransaction3, rawTransaction3, rawTransaction3, rawTransaction3, rawTransaction3, rawTransaction3},
+		txOutSpents: []bool{false, false, false, false, false, false, false, false},
 		sendHash:    [][]byte{txHash, txHash},
 	}
 	b := &gochroma.BlockExplorer{blockReaderWriter}
@@ -512,7 +514,7 @@ func TestSend(t *testing.T) {
 	if tx.TxOut[0].Value != 10000 {
 		t.Fatalf("unexpected output at 0: want %d, got %d", 10000, tx.TxOut[0].Value)
 	}
-	if tx.TxOut[1].Value != 199989900 {
-		t.Fatalf("unexpected output at 1: want %d, got %d", 199989900, tx.TxOut[1].Value)
+	if tx.TxOut[1].Value != 9900 {
+		t.Fatalf("unexpected output at 1: want %d, got %d", 9900, tx.TxOut[1].Value)
 	}
 }

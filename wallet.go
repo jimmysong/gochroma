@@ -31,7 +31,7 @@ var (
 	uncoloredAcctNum = uint32(0)
 	issuingAcctNum   = uint32(1)
 
-	uncoloredColorId = []byte{0, 0, 0, 0}
+	UncoloredColorId = []byte{0, 0, 0, 0}
 )
 
 type ColorId []byte
@@ -469,7 +469,7 @@ func (w *Wallet) NewUncoloredOutPoint(b *BlockExplorer, outPoint *btcwire.OutPoi
 		Tx:         BigEndianBytes(&outPoint.Hash),
 		Index:      outPoint.Index,
 		Value:      satoshiValue,
-		Color:      uncoloredColorId,
+		Color:      UncoloredColorId,
 		ColorValue: ColorValue(satoshiValue),
 		PkScript:   pkScript,
 	}
@@ -647,15 +647,14 @@ func (w *Wallet) AllColors() (map[*ColorDefinition]ColorId, error) {
 	return cds, nil
 }
 
-func (w *Wallet) ColorBalance(cd *ColorDefinition) (*ColorValue, error) {
-	colorId, err := w.FetchColorId(cd)
+func (w *Wallet) ColorBalance(colorId ColorId) (*ColorValue, error) {
 	outPoints, err := w.allOutPoints()
 	if err != nil {
 		return nil, err
 	}
 	sum := ColorValue(0)
 	for _, outPoint := range outPoints {
-		if bytes.Compare(outPoint.Color, *colorId) == 0 {
+		if bytes.Compare(outPoint.Color, colorId) == 0 && !outPoint.Spent {
 			sum += outPoint.ColorValue
 		}
 	}
@@ -665,7 +664,7 @@ func (w *Wallet) ColorBalance(cd *ColorDefinition) (*ColorValue, error) {
 
 func (w *Wallet) IssueColor(b *BlockExplorer, kernel ColorKernel, value ColorValue, fee int64) (*ColorDefinition, error) {
 	needed := ColorValue(kernel.IssuingSatoshiNeeded(value) + fee)
-	ins, err := w.fetchSpendable(b, uncoloredColorId, needed)
+	ins, err := w.fetchSpendable(b, UncoloredColorId, needed)
 	if err != nil {
 		return nil, err
 	}
@@ -796,7 +795,7 @@ func (w *Wallet) Send(b *BlockExplorer, cd *ColorDefinition, addrMap map[btcutil
 		}
 		outputs = append(outputs, &ColorOut{pkScript, inSum - needed})
 	}
-	uncoloredInputs, err := w.fetchSpendable(b, uncoloredColorId, ColorValue(fee))
+	uncoloredInputs, err := w.fetchSpendable(b, UncoloredColorId, ColorValue(fee))
 	if err != nil {
 		return nil, err
 	}
@@ -884,7 +883,7 @@ func (w *Wallet) Send(b *BlockExplorer, cd *ColorDefinition, addrMap map[btcutil
 }
 
 func (cop *ColorOutPoint) IsUncolored() bool {
-	return bytes.Compare(cop.Color, uncoloredColorId) == 0
+	return bytes.Compare(cop.Color, UncoloredColorId) == 0
 }
 
 func (cop *ColorOutPoint) OutPoint() (*btcwire.OutPoint, error) {
