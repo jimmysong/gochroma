@@ -17,36 +17,27 @@ import (
 	"github.com/conformal/btcrpcclient"
 	"github.com/conformal/btcutil"
 	"github.com/conformal/btcwire"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/jimmysong/gochroma"
+	"github.com/monetas/tools/btclib"
 )
 
 var (
 	seed = make([]byte, 32)
 )
 
-var _ = spew.Dump
-
 func setUp() (*gochroma.BlockExplorer, *gochroma.Wallet, func(), error) {
 	// create some temporary files and directories on the system
 	systemTmp := os.TempDir()
-	walletTmp, err := ioutil.TempDir(systemTmp, "cc_test")
+	walletTmp, err := ioutil.TempDir(systemTmp, "integration_test")
 	if err != nil {
 		return nil, nil, nil, err
 	}
 	tempLocation := filepath.Join(walletTmp, "wallet.bin")
-	btcd1Tmp, err := ioutil.TempDir(systemTmp, "cc_test")
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	btcd2Tmp, err := ioutil.TempDir(systemTmp, "cc_test")
-	if err != nil {
-		return nil, nil, nil, err
-	}
+	rpcCertLoc := "rpc.cert"
+	rpcKeyLoc := "rpc.key"
 
-	// create some addresses to work with
+	// create a wallet
 	net := &btcnet.SimNetParams
-
 	wallet, err := gochroma.CreateWallet(seed, tempLocation, net)
 	if err != nil {
 		return nil, nil, nil, err
@@ -57,33 +48,43 @@ func setUp() (*gochroma.BlockExplorer, *gochroma.Wallet, func(), error) {
 	// run btcd so that it starts mining
 	path := os.Getenv("GOPATH")
 	btcd := filepath.Join(path, "bin", "btcd")
-	btcctl := filepath.Join(path, "bin", "btcctl")
 
-	btcd1RPCPort := "47321"
-	btcd1Port := "47311"
-	btcd1 := exec.Command(btcd, "--datadir="+btcd1Tmp+"/",
-		"--logdir="+btcd1Tmp+"/", "--debuglevel=debug", "--simnet",
-		"--listen=:"+btcd1Port, "--rpclisten=:"+btcd1RPCPort, "--rpcuser=user",
-		"--rpcpass=pass", "--rpccert=rpc.cert", "--rpckey=rpc.key")
-	btcd2RPCPort := "47322"
-	btcd2Port := "47312"
+	btcd1RPCPort, btcd2RPCPort := "47321", "47322"
+	btcd1Port, btcd2Port := "47311", "47312"
+	user, pass := "user", "pass"
 	miningStr := fmt.Sprintf("--miningaddr=%v", addr.String())
-	btcd2 := exec.Command(btcd, "--datadir="+btcd2Tmp+"/",
-		"--logdir="+btcd2Tmp+"/", "--debuglevel=debug", "--simnet",
-		"--listen=:"+btcd2Port, "--rpclisten=:"+btcd2RPCPort,
-		"--connect=localhost:"+btcd1Port, "--rpcuser=user", "--rpcpass=pass",
-		"--rpccert=rpc.cert", "--rpckey=rpc.key", "--generate", miningStr)
+	connectStr := fmt.Sprintf("--connect=localhost:%v", btcd1Port)
 
-	if err = btcd1.Start(); err != nil {
+	btcd1, err := btclib.StartBTCD(btclib.BtcdConfig{
+		ExecPath:    btcd,
+		Listen:      "127.0.0.1:" + btcd1Port,
+		RPCUser:     user,
+		RPCPassword: pass,
+		RPCListen:   "127.0.0.1:" + btcd1RPCPort,
+		RPCCert:     rpcCertLoc,
+		RPCKey:      rpcKeyLoc,
+	})
+	if err != nil {
 		return nil, nil, nil, err
 	}
-	if err = btcd2.Start(); err != nil {
+	btcd2, err := btclib.StartBTCD(btclib.BtcdConfig{
+		ExecPath:         btcd,
+		Listen:           "127.0.0.1:" + btcd2Port,
+		RPCUser:          user,
+		RPCPassword:      pass,
+		RPCListen:        "127.0.0.1:" + btcd2RPCPort,
+		RPCCert:          rpcCertLoc,
+		RPCKey:           rpcKeyLoc,
+		AdditionalParams: []string{connectStr, "--generate", miningStr},
+	})
+	if err != nil {
 		return nil, nil, nil, err
 	}
+
 	time.Sleep(1000 * time.Millisecond)
 
 	// Now make a connection to the btcd for colored coins
-	certs, err := ioutil.ReadFile("rpc.cert")
+	certs, err := ioutil.ReadFile(rpcCertLoc)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -101,10 +102,8 @@ func setUp() (*gochroma.BlockExplorer, *gochroma.Wallet, func(), error) {
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 
 	tearDown := func() {
-		exec.Command(btcctl, "-C", "btcctl2.conf", "stop").Output()
-		exec.Command(btcctl, "-C", "btcctl1.conf", "stop").Output()
-		os.RemoveAll(btcd1Tmp)
-		os.RemoveAll(btcd2Tmp)
+		exec.Command("kill", string(btcd1.Process.Pid)).Output()
+		exec.Command("kill", string(btcd2.Process.Pid)).Output()
 		os.RemoveAll(walletTmp)
 	}
 
