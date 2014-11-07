@@ -323,7 +323,7 @@ func (w *Wallet) Sign(pkScript []byte, tx *btcwire.MsgTx, txIndex int) error {
 		str := fmt.Sprintf("cannot create sigScript: %s", err)
 		return errors.New(str)
 	}
-	tx.TxIn[index].SignatureScript = sigScript
+	tx.TxIn[txIndex].SignatureScript = sigScript
 	return nil
 }
 
@@ -570,6 +570,7 @@ func (w *Wallet) allOutPoints() ([]*ColorOutPoint, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return outPoints, nil
 }
 
@@ -729,28 +730,24 @@ func (w *Wallet) IssueColor(b *BlockExplorer, kernel ColorKernel, value ColorVal
 	if err != nil {
 		return nil, err
 	}
-	cid, err := w.FetchOrAddDefinition(cd.String())
+	_, err = w.FetchOrAddDefinition(cd.String())
 	if err != nil {
 		return nil, err
 	}
 
-	// add outpoint of this tx
-	outPointId, err := w.NewOutPointId()
+	// add genesis as color outpoint
+	_, err = w.NewColorOutPoint(b, genesis, cd)
 	if err != nil {
 		return nil, err
 	}
-	colorOutPoint := &ColorOutPoint{
-		Id:         outPointId,
-		Tx:         BigEndianBytes(&genesis.Hash),
-		Index:      genesis.Index,
-		Value:      uint64(tx.TxOut[genesis.Index].Value),
-		Color:      cid,
-		ColorValue: value,
-		PkScript:   pkScript,
-	}
-	err = w.storeOutPoint(colorOutPoint)
-	if err != nil {
-		return nil, err
+
+	// if there's any change, add them back as outpoints
+	if len(tx.TxOut) > 1 {
+		change := btcwire.NewOutPoint(txHash, 1)
+		_, err = w.NewUncoloredOutPoint(b, change)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return cd, nil
@@ -785,8 +782,10 @@ func (w *Wallet) Send(b *BlockExplorer, cd *ColorDefinition, addrMap map[btcutil
 		}
 		inputs = append(inputs, colorIn)
 	}
+
+	coloredChangeNeeded := inSum > needed
 	// see if we need colored change
-	if inSum > needed {
+	if coloredChangeNeeded {
 		addr, err := w.NewColorAddress(cd)
 		if err != nil {
 			return nil, err
@@ -861,6 +860,26 @@ func (w *Wallet) Send(b *BlockExplorer, cd *ColorDefinition, addrMap map[btcutil
 			return nil, err
 		}
 	}
+
+	// if there's any change, add them back as outpoints
+	// colored change
+	if coloredChangeNeeded {
+		change := btcwire.NewOutPoint(txHash, uint32(len(addrMap)))
+		_, err = w.NewColorOutPoint(b, change, cd)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// uncolored change
+	if len(tx.TxOut) > len(outputs) {
+		change := btcwire.NewOutPoint(txHash, uint32(len(outputs)))
+		_, err = w.NewUncoloredOutPoint(b, change)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return tx, nil
 }
 
