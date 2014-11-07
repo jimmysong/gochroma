@@ -27,21 +27,21 @@ var (
 
 var _ = spew.Dump
 
-func setUp(t *testing.T) (*gochroma.BlockExplorer, *gochroma.Wallet, func()) {
+func setUp() (*gochroma.BlockExplorer, *gochroma.Wallet, func(), error) {
 	// create some temporary files and directories on the system
 	systemTmp := os.TempDir()
 	walletTmp, err := ioutil.TempDir(systemTmp, "cc_test")
 	if err != nil {
-		t.Fatalf("failed to create temporary dir at %v", systemTmp)
+		return nil, nil, nil, err
 	}
 	tempLocation := filepath.Join(walletTmp, "wallet.bin")
 	btcd1Tmp, err := ioutil.TempDir(systemTmp, "cc_test")
 	if err != nil {
-		t.Fatalf("failed to create temporary dir at %v", systemTmp)
+		return nil, nil, nil, err
 	}
 	btcd2Tmp, err := ioutil.TempDir(systemTmp, "cc_test")
 	if err != nil {
-		t.Fatalf("failed to create temporary dir at %v", systemTmp)
+		return nil, nil, nil, err
 	}
 
 	// create some addresses to work with
@@ -49,7 +49,7 @@ func setUp(t *testing.T) (*gochroma.BlockExplorer, *gochroma.Wallet, func()) {
 
 	wallet, err := gochroma.CreateWallet(seed, tempLocation, net)
 	if err != nil {
-		t.Fatalf("Error while creating wallet: %v\n", err)
+		return nil, nil, nil, err
 	}
 
 	addr, err := wallet.NewUncoloredAddress()
@@ -75,17 +75,17 @@ func setUp(t *testing.T) (*gochroma.BlockExplorer, *gochroma.Wallet, func()) {
 		"--rpccert=rpc.cert", "--rpckey=rpc.key", "--generate", miningStr)
 
 	if err = btcd1.Start(); err != nil {
-		t.Fatal("failed to run btcd1")
+		return nil, nil, nil, err
 	}
 	if err = btcd2.Start(); err != nil {
-		t.Fatal("failed to run btcd2")
+		return nil, nil, nil, err
 	}
 	time.Sleep(1000 * time.Millisecond)
 
 	// Now make a connection to the btcd for colored coins
 	certs, err := ioutil.ReadFile("rpc.cert")
 	if err != nil {
-		t.Fatalf("%v\n", err)
+		return nil, nil, nil, err
 	}
 	connConfig := &btcrpcclient.ConnConfig{
 		Host:         "localhost:" + btcd2RPCPort,
@@ -96,7 +96,7 @@ func setUp(t *testing.T) (*gochroma.BlockExplorer, *gochroma.Wallet, func()) {
 	}
 	blockReaderWriter, err := gochroma.NewBtcdBlockExplorer(net, connConfig)
 	if err != nil {
-		t.Fatalf("%v\n", err)
+		return nil, nil, nil, err
 	}
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 
@@ -108,12 +108,16 @@ func setUp(t *testing.T) (*gochroma.BlockExplorer, *gochroma.Wallet, func()) {
 		os.RemoveAll(walletTmp)
 	}
 
-	return b, wallet, tearDown
+	return b, wallet, tearDown, nil
 }
 
 func TestCC(t *testing.T) {
 
-	b, wallet, tearDown := setUp(t)
+	b, wallet, tearDown, err := setUp()
+	if err != nil {
+		fmt.Printf("Couldn't set up in order to run test: %v\nSkipping...", err)
+		return
+	}
 	defer tearDown()
 
 	// grab an outpoint we can sign (we're mining to the first addr)
