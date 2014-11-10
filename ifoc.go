@@ -18,6 +18,10 @@ func (k IFOC) Code() string {
 	return "IFOC"
 }
 
+func (k IFOC) IssuingSatoshiNeeded(cv ColorValue) int64 {
+	return k.TransferAmount
+}
+
 func (k IFOC) getChange(b *BlockExplorer, inputs []*btcwire.OutPoint, fee int64) (*int64, error) {
 	sum := int64(0)
 	for _, input := range inputs {

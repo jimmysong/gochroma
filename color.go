@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/monetas/btcwire"
+	"github.com/monetas/fastsha256"
 )
 
 type ColorValue uint64
@@ -33,6 +34,8 @@ type ColorKernel interface {
 	Code() string
 	// Takes any outpoint and determines the color value given the genesis
 	OutPointToColorIn(b *BlockExplorer, genesis, outPoint *btcwire.OutPoint) (*ColorIn, error)
+	// Returns the number of satoshi needed for a particular color value
+	IssuingSatoshiNeeded(cv ColorValue) int64
 	// Validates the color inputs and checks if the color values
 	// correspond to this kernel and genesis
 	ColorInsValid(b *BlockExplorer, genesis *btcwire.OutPoint, colorIns []*ColorIn) (bool, error)
@@ -83,6 +86,20 @@ func (c *ColorDefinition) String() string {
 	return fmt.Sprintf("%v:%v:%d:%d", c.Code(), c.Genesis.Hash, c.Genesis.Index, c.Height)
 }
 
+func (c *ColorDefinition) HashString() string {
+	return fmt.Sprintf("%v:%v:%d", c.Code(), c.Genesis.Hash, c.Genesis.Index)
+}
+
+func (c *ColorDefinition) Hash() []byte {
+	hash := fastsha256.Sum256([]byte(c.HashString()))
+	return hash[:]
+}
+
+func (c *ColorDefinition) AccountNumber() uint32 {
+	cdHash := c.Hash()
+	return DeserializeUint32(cdHash[:4]) % (1 << 31)
+}
+
 func (c *ColorDefinition) RunKernel(tx *btcwire.MsgTx, inputs []ColorValue) ([]ColorValue, error) {
 	return c.CalculateOutColorValues(c.Genesis, tx, inputs)
 }
@@ -106,8 +123,6 @@ func NewColorDefinition(kernel ColorKernel, genesis *btcwire.OutPoint, height in
 }
 
 func NewColorDefinitionFromStr(cdString string) (*ColorDefinition, error) {
-	// TODO: see if this definition is in the DB
-
 	components := strings.Split(cdString, ":")
 	if len(components) != 4 {
 		return nil, MakeError(ErrBadColorDefinition, "color definition should have 4 components", nil)
@@ -130,7 +145,7 @@ func NewColorDefinitionFromStr(cdString string) (*ColorDefinition, error) {
 	if err != nil {
 		return nil, MakeError(ErrInvalidTx, "height is invalid", err)
 	}
-	if height <= 0 {
+	if height < 0 {
 		return nil, MakeError(ErrInvalidTx, "height is negative", nil)
 	}
 
