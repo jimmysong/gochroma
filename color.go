@@ -1,6 +1,7 @@
 package gochroma
 
 import (
+	"encoding/binary"
 	"fmt"
 	"strconv"
 	"strings"
@@ -50,7 +51,7 @@ type ColorKernel interface {
 	CalculateOutColorValues(genesis *btcwire.OutPoint, tx *btcwire.MsgTx, inputs []ColorValue) ([]ColorValue, error)
 	// Figures out which inputs the outputs were affected by.
 	// Note the outputs array is the collection of indices for tx.TxOuts
-	FindAffectingInputs(b *BlockExplorer, genesis *btcwire.OutPoint, tx *btcwire.MsgTx, outputs []int) ([]*btcwire.OutPoint, error)
+	FindAffectingInputs(genesis *btcwire.OutPoint, tx *btcwire.MsgTx, outputs []int) ([]*btcwire.OutPoint, error)
 }
 
 var kernelMap = make(map[string]ColorKernel, 10)
@@ -97,15 +98,15 @@ func (c *ColorDefinition) Hash() []byte {
 
 func (c *ColorDefinition) AccountNumber() uint32 {
 	cdHash := c.Hash()
-	return DeserializeUint32(cdHash[:4]) % (1 << 31)
+	return binary.LittleEndian.Uint32(cdHash[:4]) % (1 << 31)
 }
 
 func (c *ColorDefinition) RunKernel(tx *btcwire.MsgTx, inputs []ColorValue) ([]ColorValue, error) {
 	return c.CalculateOutColorValues(c.Genesis, tx, inputs)
 }
 
-func (c *ColorDefinition) AffectingInputs(b *BlockExplorer, tx *btcwire.MsgTx, outputs []int) ([]*btcwire.OutPoint, error) {
-	return c.FindAffectingInputs(b, c.Genesis, tx, outputs)
+func (c *ColorDefinition) AffectingInputs(tx *btcwire.MsgTx, outputs []int) ([]*btcwire.OutPoint, error) {
+	return c.FindAffectingInputs(c.Genesis, tx, outputs)
 }
 
 func (c *ColorDefinition) ColorValue(b *BlockExplorer, outPoint *btcwire.OutPoint) (*ColorValue, error) {
