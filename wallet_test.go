@@ -110,7 +110,7 @@ func TestAddDefinition(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer wallet.Close()
-	colorStr := "IFOC:00000000000000000000000000000000:0:1"
+	colorStr := "SPOBC:00000000000000000000000000000000:0:1"
 
 	// execute
 	id, err := wallet.FetchOrAddDefinition(colorStr)
@@ -137,7 +137,7 @@ func TestNewAddress(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer wallet.Close()
-	colorStr := "IFOC:00000000000000000000000000000000:0:1"
+	colorStr := "SPOBC:00000000000000000000000000000000:0:1"
 	_, err = wallet.FetchOrAddDefinition(colorStr)
 	if err != nil {
 		t.Fatal(err)
@@ -172,7 +172,7 @@ func TestNewAddress(t *testing.T) {
 	if got != want {
 		t.Fatalf("address differs from expected: want %v, got %v", want, got)
 	}
-	want = "SeRJw4T3yY2sQpq4ehUmsmRwj7Mp7N9Kog"
+	want = "SYQikix7fWMMQ9LPFtrNKwVzTDaNUzVYvN"
 	got = colorAddr.String()
 	if got != want {
 		t.Fatalf("address differs from expected: want %v, got %v", want, got)
@@ -225,7 +225,7 @@ func TestNewUncoloredOutPoint(t *testing.T) {
 	}
 	defer wallet.Close()
 	blockReaderWriter := &TstBlockReaderWriter{
-		rawTx: [][]byte{rawTransaction},
+		rawTx: [][]byte{normalTx},
 	}
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 	shaHash, err := gochroma.NewShaHash(txHash)
@@ -269,20 +269,20 @@ func TestNewColorOutPoint(t *testing.T) {
 	}
 	defer wallet.Close()
 	blockReaderWriter := &TstBlockReaderWriter{
-		txBlockHash: txBlockHash,
-		block:       block,
-		rawTx:       rawTx,
+		txBlockHash: [][]byte{blockHash},
+		block:       [][]byte{rawBlock},
+		rawTx:       [][]byte{genesisTx, genesisTx},
 		txOutSpents: []bool{false},
 	}
 	b := &gochroma.BlockExplorer{blockReaderWriter}
-	tx, err := btcutil.NewTxFromBytes(rawTx[0])
+	tx, err := btcutil.NewTxFromBytes(genesisTx)
 	if err != nil {
 		t.Fatalf("failed to get tx %v", err)
 	}
 	outPoint := btcwire.NewOutPoint(tx.Sha(), 0)
 	shaBytes := gochroma.BigEndianBytes(tx.Sha())
 	txString := fmt.Sprintf("%x", shaBytes)
-	colorStr := "IFOC:" + txString + ":0:1"
+	colorStr := "SPOBC:" + txString + ":0:1"
 	cd, err := gochroma.NewColorDefinitionFromStr(colorStr)
 	if err != nil {
 		t.Fatal(err)
@@ -322,7 +322,9 @@ func TestIssueColor(t *testing.T) {
 	}
 	defer wallet.Close()
 	blockReaderWriter := &TstBlockReaderWriter{
-		rawTx:       [][]byte{rawTransaction2, rawTransaction2, rawTransaction2, rawTransaction2, rawTransaction2, rawTransaction2, rawTransaction2},
+		block:       [][]byte{rawBlock},
+		txBlockHash: [][]byte{blockHash},
+		rawTx:       [][]byte{specialTx, specialTx, specialTx, specialTx, specialTx, specialTx, specialTx},
 		txOutSpents: []bool{false, false, false},
 		sendHash:    [][]byte{txHash},
 	}
@@ -336,7 +338,7 @@ func TestIssueColor(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	kernelCode := "IFOC"
+	kernelCode := "SPOBC"
 	kernel, err := gochroma.GetColorKernel(kernelCode)
 	if err != nil {
 		t.Fatal(err)
@@ -373,7 +375,7 @@ func TestAllColors(t *testing.T) {
 	defer wallet.Close()
 	num := 10
 	for i := 0; i < num; i++ {
-		def := fmt.Sprintf("IFOC:%x:0:1", seed)
+		def := fmt.Sprintf("SPOBC:%x:0:1", seed)
 		_, err = wallet.FetchOrAddDefinition(def)
 		seed[0] += 1
 	}
@@ -404,20 +406,20 @@ func TestColorBalance(t *testing.T) {
 	}
 	defer wallet.Close()
 	blockReaderWriter := &TstBlockReaderWriter{
-		txBlockHash: txBlockHash,
-		block:       block,
-		rawTx:       rawTx,
+		txBlockHash: [][]byte{blockHash},
+		block:       [][]byte{rawBlock},
+		rawTx:       [][]byte{genesisTx, genesisTx},
 		txOutSpents: []bool{false},
 	}
 	b := &gochroma.BlockExplorer{blockReaderWriter}
-	tx, err := btcutil.NewTxFromBytes(rawTx[0])
+	tx, err := btcutil.NewTxFromBytes(genesisTx)
 	if err != nil {
 		t.Fatalf("failed to get tx %v", err)
 	}
 	outPoint := btcwire.NewOutPoint(tx.Sha(), 0)
 	shaBytes := gochroma.BigEndianBytes(tx.Sha())
 	txString := fmt.Sprintf("%x", shaBytes)
-	colorStr := "IFOC:" + txString + ":0:1"
+	colorStr := "SPOBC:" + txString + ":0:1"
 	cd, err := gochroma.NewColorDefinitionFromStr(colorStr)
 	if err != nil {
 		t.Fatal(err)
@@ -458,9 +460,9 @@ func TestSend(t *testing.T) {
 	}
 	defer wallet.Close()
 	blockReaderWriter := &TstBlockReaderWriter{
-		txBlockHash: txBlockHash,
-		block:       block,
-		rawTx:       [][]byte{rawTransaction2, rawTransaction2, rawTransaction2, rawTransaction3, rawTransaction3, rawTransaction3, rawTransaction3, rawTransaction3, rawTransaction3, rawTransaction3, rawTransaction3, rawTransaction3, rawTransaction3},
+		txBlockHash: [][]byte{blockHash},
+		block:       [][]byte{rawBlock},
+		rawTx:       [][]byte{specialTx, specialTx, specialTx, niceTx, niceTx, niceTx, niceTx, niceTx, niceTx, niceTx, niceTx, niceTx, niceTx},
 		txOutSpents: []bool{false, false, false, false, false, false, false, false},
 		sendHash:    [][]byte{txHash, txHash},
 	}
@@ -483,7 +485,7 @@ func TestSend(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	kernelCode := "IFOC"
+	kernelCode := "SPOBC"
 	kernel, err := gochroma.GetColorKernel(kernelCode)
 	if err != nil {
 		t.Fatal(err)
@@ -498,8 +500,9 @@ func TestSend(t *testing.T) {
 		t.Fatal(err)
 	}
 	addrMap := map[btcutil.Address]gochroma.ColorValue{addr: value}
+	fee := int64(100)
 	// execute
-	tx, err := wallet.Send(b, cd, addrMap, 100)
+	tx, err := wallet.Send(b, cd, addrMap, fee)
 
 	// validate
 	if err != nil {
@@ -511,10 +514,13 @@ func TestSend(t *testing.T) {
 	if len(tx.TxOut) != 2 {
 		t.Fatalf("expected more outputs: want %d, got %d", 2, len(tx.TxOut))
 	}
-	if tx.TxOut[0].Value != 10000 {
-		t.Fatalf("unexpected output at 0: want %d, got %d", 10000, tx.TxOut[0].Value)
+	spobc := kernel.(*gochroma.SPOBC)
+	want := spobc.MinimumSatoshi
+	if tx.TxOut[0].Value != want {
+		t.Fatalf("unexpected output at 0: want %d, got %d", want, tx.TxOut[0].Value)
 	}
-	if tx.TxOut[1].Value != 9900 {
-		t.Fatalf("unexpected output at 1: want %d, got %d", 9900, tx.TxOut[1].Value)
+	want = 20000 - want - fee
+	if tx.TxOut[1].Value != want {
+		t.Fatalf("unexpected output at 1: want %d, got %d", want, tx.TxOut[1].Value)
 	}
 }

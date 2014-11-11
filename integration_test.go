@@ -1,4 +1,4 @@
-// This is an integration test for showing how to use IFOC
+// This is an integration test for showing how to use SPOBC
 // kernel with btcwallet. The smart property gets issued and
 // goes through three different addresses.
 
@@ -138,20 +138,20 @@ func TestCC(t *testing.T) {
 	}
 
 	// grab the kernel
-	ifoc, err := gochroma.GetColorKernel("IFOC")
+	spobc, err := gochroma.GetColorKernel("SPOBC")
 	if err != nil {
-		t.Fatalf("error getting ifoc kernel: %v", err)
+		t.Fatalf("error getting spobc kernel: %v", err)
 	}
 
 	// Create the issuing tx
-	cd, err := wallet.IssueColor(b, ifoc, gochroma.ColorValue(1), 10000)
+	cd, err := wallet.IssueColor(b, spobc, gochroma.ColorValue(1), 10000)
 	if err != nil {
 		t.Fatalf("failed to issue color: %v", err)
 	}
 
 	// check that the color value of the outpoint is what we expect
 	currentOut := cd.Genesis
-	colorIn, err := ifoc.OutPointToColorIn(b, cd.Genesis, currentOut)
+	colorIn, err := spobc.OutPointToColorIn(b, cd.Genesis, currentOut)
 	if err != nil {
 		t.Fatalf("cannot get color value: %v, %v", cd.Genesis, err)
 	}
