@@ -6,23 +6,27 @@ import (
 	"github.com/conformal/btcwire"
 )
 
+const (
+	SPOBCSequenceMarker uint32 = 0x07ffffff // first 6 bits are 000001
+)
+
 func init() {
-	RegisterColorKernel(&IFOC{TransferAmount: 10000})
+	RegisterColorKernel(&SPOBC{MinimumSatoshi: int64(5430)})
 }
 
-type IFOC struct {
-	TransferAmount int64
+type SPOBC struct {
+	MinimumSatoshi int64
 }
 
-func (k IFOC) Code() string {
-	return "IFOC"
+func (k SPOBC) Code() string {
+	return "SPOBC"
 }
 
-func (k IFOC) IssuingSatoshiNeeded(cv ColorValue) int64 {
-	return k.TransferAmount
+func (k SPOBC) IssuingSatoshiNeeded(cv ColorValue) int64 {
+	return k.MinimumSatoshi
 }
 
-func (k IFOC) getChange(b *BlockExplorer, inputs []*btcwire.OutPoint, fee int64) (*int64, error) {
+func (k SPOBC) getChange(b *BlockExplorer, inputs []*btcwire.OutPoint, fee int64) (*int64, error) {
 	sum := int64(0)
 	for _, input := range inputs {
 		// return an error if this input has been spent already
@@ -48,9 +52,9 @@ func (k IFOC) getChange(b *BlockExplorer, inputs []*btcwire.OutPoint, fee int64)
 	}
 
 	// add up all inputs in order and see if we have enough
-	amountNeeded := fee + k.TransferAmount
+	amountNeeded := fee + k.MinimumSatoshi
 	if sum < amountNeeded {
-		str := fmt.Sprintf("have %d satoshi, need %d satoshi", sum,
+		str := fmt.Sprintf("have %d satoshi, need %d satoshi to issue", sum,
 			amountNeeded)
 		return nil, MakeError(ErrInsufficientFunds, str, nil)
 	}
@@ -58,24 +62,7 @@ func (k IFOC) getChange(b *BlockExplorer, inputs []*btcwire.OutPoint, fee int64)
 	return &change, nil
 }
 
-func (k IFOC) checkOutputs(outputs []*ColorOut, destroy bool) error {
-	if len(outputs) != 1 {
-		str := fmt.Sprintf("ifoc should have exactly 1 output: %d", len(outputs))
-		return MakeError(ErrInvalidColorValue, str, nil)
-	}
-
-	if outputs[0].ColorValue > 1 {
-		return MakeError(ErrInsufficientColorValue, "ifoc only should ever have 1 color value", nil)
-	}
-
-	if !destroy && outputs[0].ColorValue < 1 {
-		return MakeError(ErrDestroyColorValue, "destroying color value unintentionally", nil)
-	}
-
-	return nil
-}
-
-func (k IFOC) OutPointToColorIn(b *BlockExplorer,
+func (k SPOBC) OutPointToColorIn(b *BlockExplorer,
 	genesis, outPoint *btcwire.OutPoint) (*ColorIn, error) {
 
 	colorIn := &ColorIn{
@@ -96,8 +83,10 @@ func (k IFOC) OutPointToColorIn(b *BlockExplorer,
 	if err != nil {
 		return nil, err
 	}
-	// If the outpoint isn't the right amount, we can assume 0
-	if value != k.TransferAmount {
+
+	// If the outpoint is a zero-value OP_RETURN, this smart property was
+	// destroyed
+	if value == 0 {
 		return colorIn, nil
 	}
 	current := outPoint
@@ -134,7 +123,7 @@ func (k IFOC) OutPointToColorIn(b *BlockExplorer,
 	return colorIn, nil
 }
 
-func (k IFOC) ColorInsValid(b *BlockExplorer, genesis *btcwire.OutPoint,
+func (k SPOBC) ColorInsValid(b *BlockExplorer, genesis *btcwire.OutPoint,
 	colorIns []*ColorIn) (bool, error) {
 	for _, colorIn := range colorIns {
 		calculated, err := k.OutPointToColorIn(b, genesis, colorIn.OutPoint)
@@ -148,13 +137,17 @@ func (k IFOC) ColorInsValid(b *BlockExplorer, genesis *btcwire.OutPoint,
 	return true, nil
 }
 
-func (k IFOC) IssuingTx(b *BlockExplorer, inputs []*btcwire.OutPoint,
+func (k SPOBC) IssuingTx(b *BlockExplorer, inputs []*btcwire.OutPoint,
 	outputs []*ColorOut, changeScript []byte,
 	fee int64) (*btcwire.MsgTx, error) {
 
-	err := k.checkOutputs(outputs, false)
-	if err != nil {
-		return nil, err
+	if len(outputs) != 1 {
+		str := fmt.Sprintf("spobc should have exactly 1 output: %d", len(outputs))
+		return nil, MakeError(ErrInvalidColorValue, str, nil)
+	}
+
+	if outputs[0].ColorValue != 1 {
+		return nil, MakeError(ErrInsufficientColorValue, "spobc only should ever issue 1 color value", nil)
 	}
 
 	change, err := k.getChange(b, inputs, fee)
@@ -165,43 +158,54 @@ func (k IFOC) IssuingTx(b *BlockExplorer, inputs []*btcwire.OutPoint,
 	// create the transaction
 	msgTx := btcwire.NewMsgTx()
 	for _, input := range inputs {
-		msgTx.AddTxIn(btcwire.NewTxIn(input, nil))
+		txIn := btcwire.NewTxIn(input, nil)
+		// add the special nSequence marker
+		txIn.Sequence = SPOBCSequenceMarker
+		msgTx.AddTxIn(txIn)
 	}
-	for _, output := range outputs {
-		msgTx.AddTxOut(btcwire.NewTxOut(k.TransferAmount, output.Script))
-	}
+	msgTx.AddTxOut(btcwire.NewTxOut(k.MinimumSatoshi, outputs[0].Script))
 	if *change > 0 {
 		msgTx.AddTxOut(btcwire.NewTxOut(*change, changeScript))
 	}
 	return msgTx, nil
 }
 
-func (k IFOC) TransferringTx(b *BlockExplorer, inputs []*ColorIn,
+func (k SPOBC) TransferringTx(b *BlockExplorer, inputs []*ColorIn,
 	outputs []*ColorOut, changeScript []byte,
 	fee int64, destroy bool) (*btcwire.MsgTx, error) {
 
-	k.checkOutputs(outputs, destroy)
+	sum := ColorValue(0)
+	inLength := len(inputs)
+	outLength := len(outputs)
+	for i := 0; i < inLength && i < outLength; i++ {
+		var in *ColorIn
+		var out *ColorOut
+		if i < inLength {
+			in = inputs[i]
+			sum += in.ColorValue
+		}
+		if i < outLength {
+			out = outputs[i]
+		}
+		if in != nil && out != nil {
+			if out.ColorValue > in.ColorValue {
+				return nil, MakeError(ErrInsufficientColorValue, "you cannot create color value in a transfer", nil)
+			}
+		}
+		if !destroy && in.ColorValue == ColorValue(1) && (out == nil || out.ColorValue == ColorValue(0)) {
+			return nil, MakeError(ErrDestroyColorValue, "destroying color value unintentionally", nil)
+		}
+	}
+	if sum > ColorValue(1) {
+		return nil, MakeError(ErrTooMuchColorValue, "spobc only should ever have 1 color value", nil)
+	}
+	if sum == ColorValue(0) {
+		return nil, MakeError(ErrInsufficientColorValue, "spobc has no color value in the inputs", nil)
+	}
 
 	change, err := k.getChange(b, OutPoints(inputs), fee)
 	if err != nil {
 		return nil, err
-	}
-
-	// check the color value
-	inSum := ColorValue(0)
-	for _, input := range inputs {
-		inSum += input.ColorValue
-	}
-	if inSum != 1 {
-		return nil, MakeError(ErrInvalidColorValue, "IFOC only supports exactly 1 color value", nil)
-	}
-	// check the color value
-	outSum := ColorValue(0)
-	for _, output := range outputs {
-		outSum += output.ColorValue
-	}
-	if outSum != 1 {
-		return nil, MakeError(ErrInvalidColorValue, "IFOC only supports exactly 1 color value", nil)
 	}
 
 	// create the transaction
@@ -210,7 +214,7 @@ func (k IFOC) TransferringTx(b *BlockExplorer, inputs []*ColorIn,
 		msgTx.AddTxIn(btcwire.NewTxIn(input.OutPoint, nil))
 	}
 	for _, output := range outputs {
-		msgTx.AddTxOut(btcwire.NewTxOut(k.TransferAmount, output.Script))
+		msgTx.AddTxOut(btcwire.NewTxOut(k.MinimumSatoshi, output.Script))
 	}
 	if *change > 0 {
 		msgTx.AddTxOut(btcwire.NewTxOut(*change, changeScript))
@@ -218,7 +222,7 @@ func (k IFOC) TransferringTx(b *BlockExplorer, inputs []*ColorIn,
 	return msgTx, nil
 }
 
-func (k IFOC) CalculateOutColorValues(genesis *btcwire.OutPoint, tx *btcwire.MsgTx, inputs []ColorValue) ([]ColorValue, error) {
+func (k SPOBC) CalculateOutColorValues(genesis *btcwire.OutPoint, tx *btcwire.MsgTx, inputs []ColorValue) ([]ColorValue, error) {
 	outputs := make([]ColorValue, len(tx.TxOut))
 
 	// handle case where the tx is the issuing tx
@@ -233,8 +237,16 @@ func (k IFOC) CalculateOutColorValues(genesis *btcwire.OutPoint, tx *btcwire.Msg
 
 	// check inputs don't sum to more than 1
 	sum := ColorValue(0)
-	for _, value := range inputs {
+	txOutLength := len(tx.TxOut)
+	for i, value := range inputs {
 		sum += value
+		if value > ColorValue(1) {
+			err := fmt.Sprintf("too much color value, should be at most 1, got %d", value)
+			return nil, MakeError(ErrTooMuchColorValue, err, nil)
+		}
+		if txOutLength > i && tx.TxOut[i].Value != 0 && value == ColorValue(1) {
+			outputs[i] = ColorValue(1)
+		}
 	}
 	if sum > ColorValue(1) {
 		err := fmt.Sprintf("too much color value, should be 1, got %d", sum)
@@ -243,22 +255,10 @@ func (k IFOC) CalculateOutColorValues(genesis *btcwire.OutPoint, tx *btcwire.Msg
 		return outputs, nil
 	}
 
-	// check that the first input has the 1 color value
-	if inputs[0] != ColorValue(1) {
-		return nil, MakeError(ErrInvalidColorValue, "First Input ColorValue is not 1", nil)
-	}
-
-	// if the first tx output does not have the right transferring amount
-	// we're destroying the color value
-	if tx.TxOut[0].Value != k.TransferAmount {
-		return outputs, nil
-	}
-
-	outputs[0] = ColorValue(1)
 	return outputs, nil
 }
 
-func (k IFOC) FindAffectingInputs(b *BlockExplorer, genesis *btcwire.OutPoint, tx *btcwire.MsgTx, outputs []int) ([]*btcwire.OutPoint, error) {
+func (k SPOBC) FindAffectingInputs(b *BlockExplorer, genesis *btcwire.OutPoint, tx *btcwire.MsgTx, outputIndexes []int) ([]*btcwire.OutPoint, error) {
 	// handle case where the tx is the issuing tx
 	txShaHash, err := tx.TxSha()
 	if err != nil {
@@ -268,30 +268,28 @@ func (k IFOC) FindAffectingInputs(b *BlockExplorer, genesis *btcwire.OutPoint, t
 		return nil, nil
 	}
 
-	// handle the case where the outputs are nil
-	if outputs == nil {
+	// handle the case where the outputIndexes are nil
+	if outputIndexes == nil {
 		return nil, nil
 	}
 
 	// handle the case where there's more than one output
-	if len(outputs) > 1 {
-		return nil, MakeError(ErrTooManyOutputs, "can't track back more than 1 output in IFOC", err)
+	if len(outputIndexes) > 1 {
+		return nil, MakeError(ErrTooManyOutputs, "can't track back more than 1 output in SPOBC", err)
 	}
 
-	// handle the case where the output is not 0
-	if outputs[0] != 0 {
-		return nil, MakeError(ErrBadOutputIndex, "can't track back any index other than 0", err)
+	outputIndex := outputIndexes[0]
+
+	// check that the tx has the right number of outputs
+	if len(tx.TxOut) <= outputIndex {
+		return nil, MakeError(ErrBadOutputIndex, "output index is corrupt", nil)
 	}
 
-	// check that the right amount is in the first input
-	outPoint := tx.TxIn[0].PreviousOutPoint
-	value, err := b.OutPointValue(&outPoint)
-	if err != nil {
-		return nil, err
-	}
-	if value != k.TransferAmount {
+	// if there aren't any inputs that correspond to the output index, send back nil
+	if len(tx.TxIn) <= outputIndex {
 		return nil, nil
 	}
 
+	outPoint := tx.TxIn[outputIndex].PreviousOutPoint
 	return []*btcwire.OutPoint{&outPoint}, nil
 }

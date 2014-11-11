@@ -2,8 +2,6 @@ package gochroma_test
 
 import (
 	"crypto/rand"
-	"encoding/hex"
-	"fmt"
 	"testing"
 
 	"github.com/conformal/btcutil"
@@ -12,80 +10,18 @@ import (
 )
 
 var (
-	key = "IFOC"
-
-	genesisTxBytesStr = "01000000011a932892802d8e1657bdc84feb3663a38ea64c33b0f5436606309d6f610a01fd000000006b483045022100d1fdca93b2074caf8fe329babe0472d381721384f183566cdf7ea34e8522df3402203e0176301ef6a192bccf94ae1c5ed50df67e1ff2227fb35b6da6adafbcc1321901210277d7813a44ee7325b9cdffd22e9b0f44ad3b5b0433cc69853c21cc7e6ebeb503ffffffff0210270000000000001976a914143caef14f63625b633b77dedac55f9deaedae6088acf0908800000000001976a9147d83495938585f3f9e01cfb2137f94b0f0f2ce2588ac00000000"
-
-	txBlockHashStr = "00000000003583bc221e70c80ce8e3d67b49be70bb3b1fd6a191d2040babd3e8"
-
-	blockBytesStr = "020000009153031afe12d843b71b2a8a64ba0c516630e5fe34ee0a228d4b0400000000003f38188e708f2af4973972100e29b221c3c7c703ce12ad4c42d469aaf8267f2cc2e12e54c0ff3f1b1cc2312f0101000000010000000000000000000000000000000000000000000000000000000000000000ffffffff2303057b04164b6e434d696e657242519dceb367fae996d0542ee1c200000000a0010000ffffffff0100f90295000000001976a9149e8985f82bc4e0f753d0492aa8d11cc39925774088ac00000000"
-
-	bytesStr = "0100000001aa570d9d285fe85030361b9704068b80bea89e49ad26079c2ecca8a555f8bbb8010000006c493046022100b09a37ead2637d8ffdbe2fb896a74a1c9e2f01ce306b24def2688cb7810ae609022100c019910aaf0a3317d4555441580bc5a5de6f7851d86e81aa854fef38debfefbc0121037843af5cf98718f57d6887f01d7b30bd0c6ed915eb6648ee30889861bd3a7feaffffffff0200e1f505000000001976a9149bbd3b6b3da61901454a9e3c0a22ac6c626cc0fa88ac32f8196f000000001976a9144d273d3a2ce1824d1c6db0764eebb03f368fd9af88ac00000000"
-
-	bytesNormalStr = "0100000001aa570d9d285fe85030361b9704068b80bea89e49ad26079c2ecca8a555f8bbb8010000006c493046022100b09a37ead2637d8ffdbe2fb896a74a1c9e2f01ce306b24def2688cb7810ae609022100c019910aaf0a3317d4555441580bc5a5de6f7851d86e81aa854fef38debfefbc0121037843af5cf98718f57d6887f01d7b30bd0c6ed915eb6648ee30889861bd3a7feaffffffff0210270000000000001976a9149bbd3b6b3da61901454a9e3c0a22ac6c626cc0fa88ac32f8196f000000001976a9144d273d3a2ce1824d1c6db0764eebb03f368fd9af88ac00000000"
-
-	bytesWrongAmountStr = "0100000001aa570d9d285fe85030361b9704068b80bea89e49ad26079c2ecca8a555f8bbb8010000006c493046022100b09a37ead2637d8ffdbe2fb896a74a1c9e2f01ce306b24def2688cb7810ae609022100c019910aaf0a3317d4555441580bc5a5de6f7851d86e81aa854fef38debfefbc0121037843af5cf98718f57d6887f01d7b30bd0c6ed915eb6648ee30889861bd3a7feaffffffff0211270000000000001976a9149bbd3b6b3da61901454a9e3c0a22ac6c626cc0fa88ac32f8196f000000001976a9144d273d3a2ce1824d1c6db0764eebb03f368fd9af88ac00000000"
+	key = "SPOBC"
 )
-
-var (
-	rawTx            [][]byte
-	txBlockHash      [][]byte
-	block            [][]byte
-	bytesWant        [][]byte
-	bytesNormal      [][]byte
-	bytesWrongAmount [][]byte
-)
-
-func init() {
-	genesisTxBytes, err := hex.DecodeString(genesisTxBytesStr)
-	if err != nil {
-		fmt.Errorf("failed to convert string to bytes :%v\n", err)
-	}
-	rawTx = [][]byte{genesisTxBytes, genesisTxBytes, genesisTxBytes}
-	if err != nil {
-		fmt.Errorf("failed to convert string to bytes :%v\n", err)
-	}
-
-	txBlockHashBytes, err := hex.DecodeString(txBlockHashStr)
-	if err != nil {
-		fmt.Errorf("failed to convert string to bytes :%v\n", err)
-	}
-	txBlockHash = [][]byte{txBlockHashBytes, txBlockHashBytes}
-
-	blockBytes, err := hex.DecodeString(blockBytesStr)
-	if err != nil {
-		fmt.Errorf("failed to convert string to bytes: %v", err)
-	}
-	block = [][]byte{blockBytes, blockBytes}
-
-	bw, err := hex.DecodeString(bytesStr)
-	if err != nil {
-		fmt.Errorf("failed to convert string to bytes: %v", err)
-	}
-	bytesWant = [][]byte{bw}
-
-	bn, err := hex.DecodeString(bytesNormalStr)
-	if err != nil {
-		fmt.Errorf("failed to convert string to bytes: %v", err)
-	}
-	bytesNormal = [][]byte{bn}
-
-	bwm, err := hex.DecodeString(bytesWrongAmountStr)
-	if err != nil {
-		fmt.Errorf("failed to convert string to bytes: %v", err)
-	}
-	bytesWrongAmount = [][]byte{bwm}
-}
 
 func TestCode(t *testing.T) {
 	// Setup
-	ifoc, err := gochroma.GetColorKernel(key)
+	spobc, err := gochroma.GetColorKernel(key)
 	if err != nil {
-		t.Fatalf("error getting ifoc kernel: %v", err)
+		t.Fatalf("error getting spobc kernel: %v", err)
 	}
 
 	// Execute
-	str := ifoc.Code()
+	str := spobc.Code()
 
 	// Verify
 	if str != key {
@@ -93,26 +29,44 @@ func TestCode(t *testing.T) {
 	}
 }
 
-func TestColorInsValid(t *testing.T) {
-	ifoc, err := gochroma.GetColorKernel(key)
+func TestIssuingSatoshiNeeded(t *testing.T) {
+	// Setup
+	spobc, err := gochroma.GetColorKernel(key)
 	if err != nil {
-		t.Fatalf("error getting ifoc kernel: %v", err)
+		t.Fatalf("error getting spobc kernel: %v", err)
+	}
+
+	// Execute
+	amount := spobc.IssuingSatoshiNeeded(gochroma.ColorValue(1))
+
+	// Verify
+	spobc2 := spobc.(*gochroma.SPOBC)
+	if amount != spobc2.MinimumSatoshi {
+		t.Fatalf("wrong KernelCode, got: %v, want %v",
+			amount, spobc2.MinimumSatoshi)
+	}
+}
+
+func TestColorInsValid(t *testing.T) {
+	spobc, err := gochroma.GetColorKernel(key)
+	if err != nil {
+		t.Fatalf("error getting spobc kernel: %v", err)
 	}
 	blockReaderWriter := &TstBlockReaderWriter{
-		txBlockHash: txBlockHash,
-		block:       block,
-		rawTx:       rawTx,
+		txBlockHash: [][]byte{blockHash},
+		block:       [][]byte{rawBlock},
+		rawTx:       [][]byte{genesisTx},
 		txOutSpents: []bool{false},
 	}
 	b := &gochroma.BlockExplorer{blockReaderWriter}
-	tx, err := btcutil.NewTxFromBytes(rawTx[0])
+	tx, err := btcutil.NewTxFromBytes(genesisTx)
 	if err != nil {
 		t.Fatalf("failed to get tx %v", err)
 	}
 	outPoint := btcwire.NewOutPoint(tx.Sha(), 0)
 	colorIn := gochroma.ColorIn{outPoint, gochroma.ColorValue(1)}
 	colorIns := []*gochroma.ColorIn{&colorIn}
-	verify, err := ifoc.ColorInsValid(b, outPoint, colorIns)
+	verify, err := spobc.ColorInsValid(b, outPoint, colorIns)
 	if err != nil {
 		t.Fatalf("failed with %v", err)
 	}
@@ -123,18 +77,18 @@ func TestColorInsValid(t *testing.T) {
 
 func TestOutPointToColorIn(t *testing.T) {
 	// Setup
-	ifoc, err := gochroma.GetColorKernel(key)
+	spobc, err := gochroma.GetColorKernel(key)
 	if err != nil {
-		t.Fatalf("error getting ifoc kernel: %v", err)
+		t.Fatalf("error getting spobc kernel: %v", err)
 	}
 	blockReaderWriter := &TstBlockReaderWriter{
-		txBlockHash: txBlockHash,
-		block:       block,
-		rawTx:       rawTx,
+		txBlockHash: [][]byte{blockHash, blockHash},
+		block:       [][]byte{rawBlock, rawBlock},
+		rawTx:       [][]byte{genesisTx, genesisTx},
 		txOutSpents: []bool{false},
 	}
 	b := &gochroma.BlockExplorer{blockReaderWriter}
-	tx, err := btcutil.NewTxFromBytes(rawTx[0])
+	tx, err := btcutil.NewTxFromBytes(genesisTx)
 	if err != nil {
 		t.Fatalf("failed to get tx %v", err)
 	}
@@ -142,7 +96,7 @@ func TestOutPointToColorIn(t *testing.T) {
 	outPoint := btcwire.NewOutPoint(tx.Sha(), 0)
 
 	// Execute
-	colorIn, err := ifoc.OutPointToColorIn(b, genesis, outPoint)
+	colorIn, err := spobc.OutPointToColorIn(b, genesis, outPoint)
 	if err != nil {
 		t.Fatalf("failed with %v", err)
 	}
@@ -157,12 +111,12 @@ func TestOutPointToColorIn(t *testing.T) {
 
 func TestIssuingTx(t *testing.T) {
 	// Setup
-	ifoc, err := gochroma.GetColorKernel(key)
+	spobc, err := gochroma.GetColorKernel(key)
 	if err != nil {
-		t.Fatalf("error getting ifoc kernel: %v", err)
+		t.Fatalf("error getting spobc kernel: %v", err)
 	}
 	blockReaderWriter := &TstBlockReaderWriter{
-		rawTx:       bytesWant,
+		rawTx:       [][]byte{normalTx},
 		txOutSpents: []bool{false},
 	}
 	b := &gochroma.BlockExplorer{blockReaderWriter}
@@ -183,7 +137,7 @@ func TestIssuingTx(t *testing.T) {
 	fee := int64(100)
 
 	// Execute
-	tx, err := ifoc.IssuingTx(b, inputs, outputs, change, fee)
+	tx, err := spobc.IssuingTx(b, inputs, outputs, change, fee)
 	if err != nil {
 		t.Fatalf("error issuing tx: %v", err)
 	}
@@ -194,25 +148,32 @@ func TestIssuingTx(t *testing.T) {
 	}
 	output1 := tx.TxOut[0].Value
 	output2 := tx.TxOut[1].Value
-	ifoc2 := ifoc.(*gochroma.IFOC)
+	spobc2 := spobc.(*gochroma.SPOBC)
 
-	wantValue := ifoc2.TransferAmount
+	wantValue := spobc2.MinimumSatoshi
 	if output1 != wantValue {
 		t.Fatalf("wrong amount in first output: got %d, want %d",
 			output1, wantValue)
 	}
-	wantValue = int64(100000000) - ifoc2.TransferAmount - fee
+	wantValue = int64(100000000) - spobc2.MinimumSatoshi - fee
 	if output2 != wantValue {
 		t.Fatalf("wrong amount in second output: got %d, want %d",
 			output2, wantValue)
 	}
+
+	gotMarker := tx.TxIn[0].Sequence
+	if gotMarker != gochroma.SPOBCSequenceMarker {
+		t.Fatalf("wrong marker in tx: got %d, want %d",
+			gotMarker, gochroma.SPOBCSequenceMarker)
+	}
+
 }
 
 func TestIssuingTxError(t *testing.T) {
 	// Setup
-	ifoc, err := gochroma.GetColorKernel(key)
+	spobc, err := gochroma.GetColorKernel(key)
 	if err != nil {
-		t.Fatalf("error getting ifoc kernel: %v", err)
+		t.Fatalf("error getting spobc kernel: %v", err)
 	}
 	tests := []struct {
 		desc       string
@@ -234,7 +195,7 @@ func TestIssuingTxError(t *testing.T) {
 		},
 		{
 			desc:       "negative fee",
-			bytes:      bytesWant,
+			bytes:      [][]byte{normalTx},
 			fee:        -1,
 			colorValue: gochroma.ColorValue(1),
 			colorOuts:  1,
@@ -243,7 +204,7 @@ func TestIssuingTxError(t *testing.T) {
 		},
 		{
 			desc:       "insufficient funds",
-			bytes:      bytesWant,
+			bytes:      [][]byte{normalTx},
 			fee:        100000000,
 			colorValue: gochroma.ColorValue(1),
 			colorOuts:  1,
@@ -252,7 +213,7 @@ func TestIssuingTxError(t *testing.T) {
 		},
 		{
 			desc:       "too much color value",
-			bytes:      bytesWant,
+			bytes:      [][]byte{normalTx},
 			fee:        100,
 			colorValue: gochroma.ColorValue(2),
 			colorOuts:  1,
@@ -261,16 +222,16 @@ func TestIssuingTxError(t *testing.T) {
 		},
 		{
 			desc:       "too little color value",
-			bytes:      bytesWant,
+			bytes:      [][]byte{normalTx},
 			fee:        100,
 			colorValue: gochroma.ColorValue(0),
 			colorOuts:  1,
 			spents:     []bool{false},
-			err:        gochroma.ErrDestroyColorValue,
+			err:        gochroma.ErrInsufficientColorValue,
 		},
 		{
 			desc:       "multiple outputs",
-			bytes:      bytesWant,
+			bytes:      [][]byte{normalTx},
 			fee:        100,
 			colorValue: gochroma.ColorValue(1),
 			colorOuts:  2,
@@ -279,7 +240,7 @@ func TestIssuingTxError(t *testing.T) {
 		},
 		{
 			desc:       "spent already",
-			bytes:      bytesWant,
+			bytes:      [][]byte{normalTx},
 			fee:        100,
 			colorValue: gochroma.ColorValue(1),
 			colorOuts:  1,
@@ -288,7 +249,7 @@ func TestIssuingTxError(t *testing.T) {
 		},
 		{
 			desc:       "error on spent retrieval",
-			bytes:      bytesWant,
+			bytes:      [][]byte{normalTx},
 			fee:        100,
 			colorValue: gochroma.ColorValue(1),
 			colorOuts:  1,
@@ -324,7 +285,7 @@ func TestIssuingTxError(t *testing.T) {
 		rand.Read(change)
 
 		// Execute
-		_, err = ifoc.IssuingTx(b, inputs, outputs, change, test.fee)
+		_, err = spobc.IssuingTx(b, inputs, outputs, change, test.fee)
 
 		// Verify
 		if err == nil {
@@ -343,12 +304,12 @@ func TestIssuingTxError(t *testing.T) {
 
 func TestTransferringTx(t *testing.T) {
 	// Setup
-	ifoc, err := gochroma.GetColorKernel(key)
+	spobc, err := gochroma.GetColorKernel(key)
 	if err != nil {
-		t.Fatalf("error getting ifoc kernel: %v", err)
+		t.Fatalf("error getting spobc kernel: %v", err)
 	}
 	blockReaderWriter := &TstBlockReaderWriter{
-		rawTx:       bytesWant,
+		rawTx:       [][]byte{normalTx},
 		txOutSpents: []bool{false},
 	}
 	b := &gochroma.BlockExplorer{blockReaderWriter}
@@ -370,7 +331,7 @@ func TestTransferringTx(t *testing.T) {
 	fee := int64(100)
 
 	// Execute
-	tx, err := ifoc.TransferringTx(b, inputs, outputs, change, fee, false)
+	tx, err := spobc.TransferringTx(b, inputs, outputs, change, fee, false)
 	if err != nil {
 		t.Fatalf("error transferring  tx: %v", err)
 	}
@@ -381,14 +342,14 @@ func TestTransferringTx(t *testing.T) {
 	}
 	output1 := tx.TxOut[0].Value
 	output2 := tx.TxOut[1].Value
-	ifoc2 := ifoc.(*gochroma.IFOC)
+	spobc2 := spobc.(*gochroma.SPOBC)
 
-	wantValue := ifoc2.TransferAmount
+	wantValue := spobc2.MinimumSatoshi
 	if output1 != wantValue {
 		t.Fatalf("wrong amount in first output: got %d, want %d",
 			output1, wantValue)
 	}
-	wantValue = int64(100000000) - ifoc2.TransferAmount - fee
+	wantValue = int64(100000000) - spobc2.MinimumSatoshi - fee
 	if output2 != wantValue {
 		t.Fatalf("wrong amount in second output: got %d, want %d",
 			output2, wantValue)
@@ -397,9 +358,9 @@ func TestTransferringTx(t *testing.T) {
 
 func TestTransferringTxError(t *testing.T) {
 	// Setup
-	ifoc, err := gochroma.GetColorKernel(key)
+	spobc, err := gochroma.GetColorKernel(key)
 	if err != nil {
-		t.Fatalf("error getting ifoc kernel: %v", err)
+		t.Fatalf("error getting spobc kernel: %v", err)
 	}
 	tests := []struct {
 		desc     string
@@ -413,27 +374,48 @@ func TestTransferringTxError(t *testing.T) {
 			inValue:  gochroma.ColorValue(2),
 			outValue: gochroma.ColorValue(2),
 			fee:      100,
-			err:      gochroma.ErrInvalidColorValue,
+			err:      gochroma.ErrTooMuchColorValue,
 		},
 		{
 			desc:     "bad output",
 			inValue:  gochroma.ColorValue(1),
 			outValue: gochroma.ColorValue(2),
 			fee:      100,
-			err:      gochroma.ErrInvalidColorValue,
+			err:      gochroma.ErrInsufficientColorValue,
 		},
 		{
 			desc:     "insufficient funds",
 			inValue:  gochroma.ColorValue(1),
 			outValue: gochroma.ColorValue(2),
 			fee:      100000000,
-			err:      gochroma.ErrInsufficientFunds,
+			err:      gochroma.ErrInsufficientColorValue,
+		},
+		{
+			desc:     "destroy color",
+			inValue:  gochroma.ColorValue(1),
+			outValue: gochroma.ColorValue(0),
+			fee:      100,
+			err:      gochroma.ErrDestroyColorValue,
+		},
+		{
+			desc:     "no inputs",
+			inValue:  gochroma.ColorValue(0),
+			outValue: gochroma.ColorValue(0),
+			fee:      100,
+			err:      gochroma.ErrInsufficientColorValue,
+		},
+		{
+			desc:     "negative fee",
+			inValue:  gochroma.ColorValue(1),
+			outValue: gochroma.ColorValue(1),
+			fee:      -100,
+			err:      gochroma.ErrNegativeValue,
 		},
 	}
 
 	for _, test := range tests {
 		blockReaderWriter := &TstBlockReaderWriter{
-			rawTx:       bytesWant,
+			rawTx:       [][]byte{normalTx},
 			txOutSpents: []bool{false},
 		}
 		b := &gochroma.BlockExplorer{blockReaderWriter}
@@ -454,7 +436,7 @@ func TestTransferringTxError(t *testing.T) {
 		rand.Read(change)
 
 		// Execute
-		_, err = ifoc.TransferringTx(b, inputs, outputs, change, test.fee, false)
+		_, err = spobc.TransferringTx(b, inputs, outputs, change, test.fee, false)
 
 		// Verify
 		if err == nil {
@@ -483,12 +465,12 @@ func TestCalculateGenesis(t *testing.T) {
 	prevOut := btcwire.NewOutPoint(shaHash, 0)
 	txIn := btcwire.NewTxIn(prevOut, nil)
 	msgTx.AddTxIn(txIn)
-	ifocKernel, err := gochroma.GetColorKernel(key)
+	spobcKernel, err := gochroma.GetColorKernel(key)
 	if err != nil {
-		t.Fatalf("error getting ifoc kernel: %v", err)
+		t.Fatalf("error getting spobc kernel: %v", err)
 	}
-	ifoc := ifocKernel.(*gochroma.IFOC)
-	txOut := btcwire.NewTxOut(ifoc.TransferAmount, nil)
+	spobc := spobcKernel.(*gochroma.SPOBC)
+	txOut := btcwire.NewTxOut(spobc.MinimumSatoshi, nil)
 	msgTx.AddTxOut(txOut)
 	genesisShaHash, err := msgTx.TxSha()
 	if err != nil {
@@ -498,7 +480,7 @@ func TestCalculateGenesis(t *testing.T) {
 	inputs := []gochroma.ColorValue{1}
 
 	// Execute
-	outputs, err := ifoc.CalculateOutColorValues(genesis, msgTx, inputs)
+	outputs, err := spobc.CalculateOutColorValues(genesis, msgTx, inputs)
 	if err != nil {
 		t.Fatalf("err on calculating out color values: %v", err)
 	}
@@ -513,11 +495,11 @@ func TestCalculateGenesis(t *testing.T) {
 }
 
 func TestCalculate(t *testing.T) {
-	ifocKernel, err := gochroma.GetColorKernel(key)
+	spobcKernel, err := gochroma.GetColorKernel(key)
 	if err != nil {
-		t.Fatalf("error getting ifoc kernel: %v", err)
+		t.Fatalf("error getting spobc kernel: %v", err)
 	}
-	ifoc := ifocKernel.(*gochroma.IFOC)
+	spobc := spobcKernel.(*gochroma.SPOBC)
 
 	tests := []struct {
 		desc           string
@@ -529,25 +511,25 @@ func TestCalculate(t *testing.T) {
 			desc:           "normal transfer",
 			inputs:         []gochroma.ColorValue{1},
 			outputs:        []gochroma.ColorValue{1},
-			firstOutAmount: ifoc.TransferAmount,
+			firstOutAmount: spobc.MinimumSatoshi,
 		},
 		{
 			desc:           "multiple transfer",
 			inputs:         []gochroma.ColorValue{1, 0, 0, 0},
 			outputs:        []gochroma.ColorValue{1, 0},
-			firstOutAmount: ifoc.TransferAmount,
+			firstOutAmount: spobc.MinimumSatoshi,
 		},
 		{
 			desc:           "destroy transfer",
-			inputs:         []gochroma.ColorValue{1},
-			outputs:        []gochroma.ColorValue{0, 0},
+			inputs:         []gochroma.ColorValue{0, 1},
+			outputs:        []gochroma.ColorValue{0},
 			firstOutAmount: int64(100),
 		},
 		{
 			desc:           "null transfer",
 			inputs:         []gochroma.ColorValue{0, 0, 0},
 			outputs:        []gochroma.ColorValue{0, 0},
-			firstOutAmount: ifoc.TransferAmount,
+			firstOutAmount: spobc.MinimumSatoshi,
 		},
 	}
 
@@ -584,7 +566,7 @@ OUTER:
 		genesis := btcwire.NewOutPoint(shaHash, 0)
 
 		// Execute
-		outputs, err := ifoc.CalculateOutColorValues(genesis, msgTx, test.inputs)
+		outputs, err := spobc.CalculateOutColorValues(genesis, msgTx, test.inputs)
 		if err != nil {
 			t.Errorf("%v: err on calculating out color values: %v",
 				test.desc, err)
@@ -609,11 +591,11 @@ OUTER:
 }
 
 func TestCalculateError(t *testing.T) {
-	ifocKernel, err := gochroma.GetColorKernel(key)
+	spobcKernel, err := gochroma.GetColorKernel(key)
 	if err != nil {
-		t.Fatalf("error getting ifoc kernel: %v", err)
+		t.Fatalf("error getting spobc kernel: %v", err)
 	}
-	ifoc := ifocKernel.(*gochroma.IFOC)
+	spobc := spobcKernel.(*gochroma.SPOBC)
 
 	tests := []struct {
 		desc   string
@@ -626,9 +608,9 @@ func TestCalculateError(t *testing.T) {
 			err:    gochroma.ErrTooMuchColorValue,
 		},
 		{
-			desc:   "bad first color value",
-			inputs: []gochroma.ColorValue{0, 1},
-			err:    gochroma.ErrInvalidColorValue,
+			desc:   "too much color value",
+			inputs: []gochroma.ColorValue{2, 0},
+			err:    gochroma.ErrTooMuchColorValue,
 		},
 	}
 
@@ -658,7 +640,7 @@ OUTER:
 		genesis := btcwire.NewOutPoint(shaHash, 0)
 
 		// Execute
-		_, err = ifoc.CalculateOutColorValues(genesis, msgTx, test.inputs)
+		_, err = spobc.CalculateOutColorValues(genesis, msgTx, test.inputs)
 
 		// Verify
 		if err == nil {
@@ -687,12 +669,12 @@ func TestAffectingGenesis(t *testing.T) {
 	prevOut := btcwire.NewOutPoint(shaHash, 0)
 	txIn := btcwire.NewTxIn(prevOut, nil)
 	msgTx.AddTxIn(txIn)
-	ifocKernel, err := gochroma.GetColorKernel(key)
+	spobcKernel, err := gochroma.GetColorKernel(key)
 	if err != nil {
-		t.Fatalf("error getting ifoc kernel: %v", err)
+		t.Fatalf("error getting spobc kernel: %v", err)
 	}
-	ifoc := ifocKernel.(*gochroma.IFOC)
-	txOut := btcwire.NewTxOut(ifoc.TransferAmount, nil)
+	spobc := spobcKernel.(*gochroma.SPOBC)
+	txOut := btcwire.NewTxOut(spobc.MinimumSatoshi, nil)
 	msgTx.AddTxOut(txOut)
 	genesisShaHash, err := msgTx.TxSha()
 	if err != nil {
@@ -704,7 +686,7 @@ func TestAffectingGenesis(t *testing.T) {
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 
 	// Execute
-	inputs, err := ifoc.FindAffectingInputs(b, genesis, msgTx, outputs)
+	inputs, err := spobc.FindAffectingInputs(b, genesis, msgTx, outputs)
 	if err != nil {
 		t.Fatalf("err on calculating out color values: %v", err)
 	}
@@ -727,12 +709,12 @@ func TestAffectingNil(t *testing.T) {
 	prevOut := btcwire.NewOutPoint(shaHash, 0)
 	txIn := btcwire.NewTxIn(prevOut, nil)
 	msgTx.AddTxIn(txIn)
-	ifocKernel, err := gochroma.GetColorKernel(key)
+	spobcKernel, err := gochroma.GetColorKernel(key)
 	if err != nil {
-		t.Fatalf("error getting ifoc kernel: %v", err)
+		t.Fatalf("error getting spobc kernel: %v", err)
 	}
-	ifoc := ifocKernel.(*gochroma.IFOC)
-	txOut := btcwire.NewTxOut(ifoc.TransferAmount, nil)
+	spobc := spobcKernel.(*gochroma.SPOBC)
+	txOut := btcwire.NewTxOut(spobc.MinimumSatoshi, nil)
 	msgTx.AddTxOut(txOut)
 	rand.Read(hashBytes)
 	genesisShaHash, err := btcwire.NewShaHash(hashBytes)
@@ -744,7 +726,7 @@ func TestAffectingNil(t *testing.T) {
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 
 	// Execute
-	inputs, err := ifoc.FindAffectingInputs(b, genesis, msgTx, nil)
+	inputs, err := spobc.FindAffectingInputs(b, genesis, msgTx, nil)
 	if err != nil {
 		t.Fatalf("err on calculating out color values: %v", err)
 	}
@@ -756,19 +738,31 @@ func TestAffectingNil(t *testing.T) {
 }
 
 func TestAffecting(t *testing.T) {
+
+	spobcKernel, err := gochroma.GetColorKernel(key)
+	if err != nil {
+		t.Fatalf("error getting spobc kernel: %v", err)
+	}
+	spobc := spobcKernel.(*gochroma.SPOBC)
+	txOut := btcwire.NewTxOut(spobc.MinimumSatoshi, nil)
+
 	tests := []struct {
-		desc      string
-		bytes     [][]byte
-		numInputs int
+		desc          string
+		txOuts        []*btcwire.TxOut
+		outputIndexes []int
+		numInputs     int
 	}{
 		{
-			desc:      "normal",
-			bytes:     bytesNormal,
-			numInputs: 1,
-		}, {
-			desc:      "wrong amount",
-			bytes:     bytesWrongAmount,
-			numInputs: 0,
+			desc:          "normal",
+			outputIndexes: []int{0},
+			txOuts:        []*btcwire.TxOut{txOut},
+			numInputs:     1,
+		},
+		{
+			desc:          "nil",
+			outputIndexes: []int{1},
+			txOuts:        []*btcwire.TxOut{txOut, txOut},
+			numInputs:     0,
 		},
 	}
 
@@ -786,14 +780,9 @@ OUTER:
 		prevOut := btcwire.NewOutPoint(shaHash, 0)
 		txIn := btcwire.NewTxIn(prevOut, nil)
 		msgTx.AddTxIn(txIn)
-		ifocKernel, err := gochroma.GetColorKernel(key)
-		if err != nil {
-			t.Errorf("%v: error getting ifoc kernel: %v", test.desc, err)
-			continue
+		for _, txOut := range test.txOuts {
+			msgTx.AddTxOut(txOut)
 		}
-		ifoc := ifocKernel.(*gochroma.IFOC)
-		txOut := btcwire.NewTxOut(ifoc.TransferAmount, nil)
-		msgTx.AddTxOut(txOut)
 		rand.Read(hashBytes)
 		genesisShaHash, err := btcwire.NewShaHash(hashBytes)
 		if err != nil {
@@ -801,14 +790,13 @@ OUTER:
 			continue
 		}
 		genesis := btcwire.NewOutPoint(genesisShaHash, 0)
-		outputs := []int{0}
 		blockReaderWriter := &TstBlockReaderWriter{
-			rawTx: test.bytes,
+			rawTx: [][]byte{normalTx},
 		}
 		b := &gochroma.BlockExplorer{blockReaderWriter}
 
 		// Execute
-		inputs, err := ifoc.FindAffectingInputs(b, genesis, msgTx, outputs)
+		inputs, err := spobc.FindAffectingInputs(b, genesis, msgTx, test.outputIndexes)
 		if err != nil {
 			t.Errorf("%v: err on calculating out color values: %v", test.desc, err)
 			continue
@@ -847,11 +835,6 @@ func TestAffectingError(t *testing.T) {
 			outputs: []int{1},
 			err:     gochroma.ErrBadOutputIndex,
 		},
-		{
-			desc:    "block read error",
-			outputs: []int{0},
-			err:     gochroma.ErrBlockRead,
-		},
 	}
 
 	for _, test := range tests {
@@ -867,13 +850,13 @@ func TestAffectingError(t *testing.T) {
 		prevOut := btcwire.NewOutPoint(shaHash, 0)
 		txIn := btcwire.NewTxIn(prevOut, nil)
 		msgTx.AddTxIn(txIn)
-		ifocKernel, err := gochroma.GetColorKernel(key)
+		spobcKernel, err := gochroma.GetColorKernel(key)
 		if err != nil {
-			t.Errorf("%v: error getting ifoc kernel: %v", test.desc, err)
+			t.Errorf("%v: error getting spobc kernel: %v", test.desc, err)
 			continue
 		}
-		ifoc := ifocKernel.(*gochroma.IFOC)
-		txOut := btcwire.NewTxOut(ifoc.TransferAmount, nil)
+		spobc := spobcKernel.(*gochroma.SPOBC)
+		txOut := btcwire.NewTxOut(spobc.MinimumSatoshi, nil)
 		msgTx.AddTxOut(txOut)
 		rand.Read(hashBytes)
 		genesisShaHash, err := btcwire.NewShaHash(hashBytes)
@@ -886,7 +869,7 @@ func TestAffectingError(t *testing.T) {
 		b := &gochroma.BlockExplorer{blockReaderWriter}
 
 		// Execute
-		_, err = ifoc.FindAffectingInputs(b, genesis, msgTx, test.outputs)
+		_, err = spobc.FindAffectingInputs(b, genesis, msgTx, test.outputs)
 
 		// Verify
 		if err == nil {

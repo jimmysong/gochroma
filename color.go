@@ -1,6 +1,7 @@
 package gochroma
 
 import (
+	"encoding/binary"
 	"fmt"
 	"strconv"
 	"strings"
@@ -97,7 +98,7 @@ func (c *ColorDefinition) Hash() []byte {
 
 func (c *ColorDefinition) AccountNumber() uint32 {
 	cdHash := c.Hash()
-	return DeserializeUint32(cdHash[:4]) % (1 << 31)
+	return binary.LittleEndian.Uint32(cdHash[:4]) % (1 << 31)
 }
 
 func (c *ColorDefinition) RunKernel(tx *btcwire.MsgTx, inputs []ColorValue) ([]ColorValue, error) {
