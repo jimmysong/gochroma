@@ -109,7 +109,7 @@ func (k SPOBC) OutPointToColorIn(b *BlockExplorer,
 			return nil, err
 		}
 		inputs, err := k.FindAffectingInputs(
-			genesis, tx.MsgTx(), []int{int(current.Index)})
+			b, genesis, tx.MsgTx(), []int{int(current.Index)})
 		if err != nil {
 			return nil, err
 		}
@@ -261,7 +261,11 @@ func (k SPOBC) CalculateOutColorValues(genesis *btcwire.OutPoint, tx *btcwire.Ms
 	return outputs, nil
 }
 
-func (k SPOBC) FindAffectingInputs(genesis *btcwire.OutPoint, tx *btcwire.MsgTx, outputIndexes []int) ([]*btcwire.OutPoint, error) {
+func (k SPOBC) FindAffectingInputs(b *BlockExplorer, genesis *btcwire.OutPoint, tx *btcwire.MsgTx, outputIndexes []int) ([]*btcwire.OutPoint, error) {
+
+	// note that spobc is ENTIRELY position based, so inputValues does not
+	// matter at all.
+
 	// handle case where the tx is the issuing tx
 	txShaHash, err := tx.TxSha()
 	if err != nil {
