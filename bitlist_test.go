@@ -18,14 +18,31 @@ func TestNewBitList(t *testing.T) {
 }
 
 func TestBitListEqual(t *testing.T) {
-	// Setup
-	got := gochroma.BitList{true}
-	want := gochroma.BitList{true}
-
-	// Execute
-	// Validate
-	if !got.Equal(want) {
-		t.Fatalf("unexpected bits: got %v, want %v", got, want)
+	tests := []struct {
+		a     gochroma.BitList
+		b     gochroma.BitList
+		equal bool
+	}{
+		{
+			a:     gochroma.BitList{true},
+			b:     gochroma.BitList{true},
+			equal: true,
+		},
+		{
+			a:     gochroma.BitList{false},
+			b:     gochroma.BitList{true},
+			equal: false,
+		},
+		{
+			a:     gochroma.BitList{false, true},
+			b:     gochroma.BitList{false},
+			equal: false,
+		},
+	}
+	for _, test := range tests {
+		if test.a.Equal(test.b) != test.equal {
+			t.Fatalf("should be %v equality: a=%v, b=%v", test.equal, test.a, test.b)
+		}
 	}
 }
 
