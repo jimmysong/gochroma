@@ -10,7 +10,7 @@ import (
 )
 
 // NOTE: a lot of useful "constants" are defined in lib_test.go
-// these include: blockHash txHash errHash rawBlock rawTransaction
+// these include: blockHash txHash errHash rawBlock normalTx
 
 func TestLatestBlock(t *testing.T) {
 	// Setup
@@ -170,7 +170,7 @@ func TestPreviousBlock(t *testing.T) {
 func TestTx(t *testing.T) {
 	// Setup
 	blockReaderWriter := &TstBlockReaderWriter{
-		rawTx: [][]byte{rawTransaction},
+		rawTx: [][]byte{normalTx},
 	}
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 
@@ -186,8 +186,8 @@ func TestTx(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if bytes.Compare(bytesGot.Bytes(), rawTransaction) != 0 {
-		t.Fatalf("Did not get tx that we expected: got %x, want %x", bytesGot.Bytes(), rawTransaction)
+	if bytes.Compare(bytesGot.Bytes(), normalTx) != 0 {
+		t.Fatalf("Did not get tx that we expected: got %x, want %x", bytesGot.Bytes(), normalTx)
 	}
 }
 
@@ -275,7 +275,7 @@ func TestPreviousBlockError(t *testing.T) {
 func TestOutPointValue(t *testing.T) {
 	// Setup
 	blockReaderWriter := &TstBlockReaderWriter{
-		rawTx: [][]byte{rawTransaction},
+		rawTx: [][]byte{normalTx},
 	}
 	b := &gochroma.BlockExplorer{blockReaderWriter}
 	shaHash, err := gochroma.NewShaHash(txHash)
@@ -328,7 +328,7 @@ func TestPublishTx(t *testing.T) {
 		sendHash: [][]byte{txHash},
 	}
 	b := &gochroma.BlockExplorer{blockReaderWriter}
-	tx, err := btcutil.NewTxFromBytes(rawTransaction)
+	tx, err := btcutil.NewTxFromBytes(normalTx)
 	if err != nil {
 		t.Fatalf("couldn't make tx: %v", err)
 	}

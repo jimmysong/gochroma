@@ -10,13 +10,13 @@ import (
 
 func TestRegisterColorKernelError(t *testing.T) {
 	// Setup
-	ifoc, err := gochroma.GetColorKernel("IFOC")
+	spobc, err := gochroma.GetColorKernel("SPOBC")
 	if err != nil {
-		t.Fatalf("failed to get ifoc kernel: %v", err)
+		t.Fatalf("failed to get spobc kernel: %v", err)
 	}
 
 	// Execute
-	err = gochroma.RegisterColorKernel(ifoc)
+	err = gochroma.RegisterColorKernel(spobc)
 
 	// Verify
 	if err == nil {
@@ -46,9 +46,9 @@ func TestGetColorKernelError(t *testing.T) {
 
 func TestNewColorDefinition(t *testing.T) {
 	// Setup
-	kernel, err := gochroma.GetColorKernel("IFOC")
+	kernel, err := gochroma.GetColorKernel("SPOBC")
 	if err != nil {
-		t.Fatalf("failed to get ifoc kernel: %v", err)
+		t.Fatalf("failed to get spobc kernel: %v", err)
 	}
 	hashBytes := make([]byte, 32)
 	rand.Read(hashBytes)
@@ -65,7 +65,7 @@ func TestNewColorDefinition(t *testing.T) {
 	}
 
 	// Verify
-	wantStr := "IFOC:" + shaHash.String() + ":0:1"
+	wantStr := "SPOBC:" + shaHash.String() + ":0:1"
 	if cd.String() != wantStr {
 		t.Fatalf("wrong definition, got: %v, want %v", cd.String(), wantStr)
 	}
@@ -73,12 +73,12 @@ func TestNewColorDefinition(t *testing.T) {
 
 func TestRunKernel(t *testing.T) {
 	// Setup
-	ifocKernel, err := gochroma.GetColorKernel("IFOC")
+	spobcKernel, err := gochroma.GetColorKernel("SPOBC")
 	if err != nil {
-		t.Fatalf("failed to get ifoc kernel: %v", err)
+		t.Fatalf("failed to get spobc kernel: %v", err)
 	}
-	ifoc := ifocKernel.(*gochroma.IFOC)
-	cdStr := "IFOC:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef:0:1"
+	spobc := spobcKernel.(*gochroma.SPOBC)
+	cdStr := "SPOBC:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef:0:1"
 	cd, err := gochroma.NewColorDefinitionFromStr(cdStr)
 	if err != nil {
 		t.Fatalf("err on color definition creation: %v", err)
@@ -93,7 +93,7 @@ func TestRunKernel(t *testing.T) {
 	prevOut := btcwire.NewOutPoint(shaHash, 0)
 	txIn := btcwire.NewTxIn(prevOut, nil)
 	msgTx.AddTxIn(txIn)
-	txOut := btcwire.NewTxOut(ifoc.TransferAmount, nil)
+	txOut := btcwire.NewTxOut(spobc.MinimumSatoshi, nil)
 	msgTx.AddTxOut(txOut)
 
 	// Execute
@@ -110,7 +110,7 @@ func TestRunKernel(t *testing.T) {
 
 func TestNewColorDefinitionFromStr(t *testing.T) {
 	// Setup
-	cdStr := "IFOC:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef:0:1"
+	cdStr := "SPOBC:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef:0:1"
 
 	// Execute
 	cd, err := gochroma.NewColorDefinitionFromStr(cdStr)
@@ -132,7 +132,7 @@ func TestNewColorDefinitionFromStrError(t *testing.T) {
 	}{
 		{
 			desc:  "too few components",
-			input: "IFOC:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef:1",
+			input: "SPOBC:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef:1",
 			err:   gochroma.ErrBadColorDefinition,
 		},
 		{
@@ -142,22 +142,22 @@ func TestNewColorDefinitionFromStrError(t *testing.T) {
 		},
 		{
 			desc:  "invalid hash",
-			input: "IFOC:xxx:0:1",
+			input: "SPOBC:xxx:0:1",
 			err:   gochroma.ErrInvalidTx,
 		},
 		{
 			desc:  "invalid index",
-			input: "IFOC:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef:a:1",
+			input: "SPOBC:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef:a:1",
 			err:   gochroma.ErrInvalidTx,
 		},
 		{
 			desc:  "invalid height",
-			input: "IFOC:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef:0:a",
+			input: "SPOBC:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef:0:a",
 			err:   gochroma.ErrInvalidTx,
 		},
 		{
 			desc:  "negative height",
-			input: "IFOC:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef:0:-1",
+			input: "SPOBC:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef:0:-1",
 			err:   gochroma.ErrInvalidTx,
 		},
 	}

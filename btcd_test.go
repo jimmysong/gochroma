@@ -13,7 +13,7 @@ import (
 )
 
 // NOTE: a lot of useful "constants" are defined in lib_test.go
-// these include: blockHash txHash errHash rawBlock rawTransaction
+// these include: blockHash txHash errHash rawBlock normalTx
 
 func TestNewBtcdBlockExplorerError(t *testing.T) {
 	// Setup
@@ -217,7 +217,7 @@ func TestRawBlockError(t *testing.T) {
 func TestRawTx(t *testing.T) {
 	// Setup
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		response := "{\"result\":\"" + rawTransactionStr + "\",\"error\":null,\"id\":1}"
+		response := "{\"result\":\"" + normalTxStr + "\",\"error\":null,\"id\":1}"
 		fmt.Fprintln(w, response)
 	}))
 	defer ts.Close()
@@ -239,8 +239,8 @@ func TestRawTx(t *testing.T) {
 	}
 
 	// Verify
-	if bytes.Compare(bytesGot, rawTransaction) != 0 {
-		t.Fatalf("Did not get back what we expected: got %x, want %x", bytesGot, rawTransaction)
+	if bytes.Compare(bytesGot, normalTx) != 0 {
+		t.Fatalf("Did not get back what we expected: got %x, want %x", bytesGot, normalTx)
 	}
 }
 
@@ -546,7 +546,7 @@ func TestPublishRawTx(t *testing.T) {
 	}
 
 	// Execute
-	hashGot, err := b.PublishRawTx(rawTransaction)
+	hashGot, err := b.PublishRawTx(normalTx)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -566,7 +566,7 @@ func TestPublishRawTxError1(t *testing.T) {
 	}{
 		{
 			desc:  "BlockReaderWriter error",
-			bytes: rawTransaction,
+			bytes: normalTx,
 			err:   gochroma.ErrBlockWrite,
 		},
 		{
