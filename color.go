@@ -96,9 +96,25 @@ func (c *ColorDefinition) Hash() []byte {
 	return hash[:]
 }
 
-func (c *ColorDefinition) AccountNumber() uint32 {
+func (c *ColorDefinition) BIP32Branch() []uint32 {
 	cdHash := c.Hash()
-	return binary.LittleEndian.Uint32(cdHash[:4]) % (1 << 31)
+	// use 3 levels, this should be sufficient for non-collision
+	// (you would need over a trillion colors before a clash)
+	r := make([]uint32, 3)
+	r[0] = binary.LittleEndian.Uint32(cdHash[:4]) % (1 << 31)
+	r[1] = binary.LittleEndian.Uint32(cdHash[4:8]) % (1 << 31)
+	r[2] = binary.LittleEndian.Uint32(cdHash[8:12]) % (1 << 31)
+	return r
+}
+
+func (c *ColorDefinition) Account() []byte {
+	var r []byte
+	for _, u := range c.BIP32Branch() {
+		buf := make([]byte, 4)
+		binary.LittleEndian.PutUint32(buf, u)
+		r = append(r, buf...)
+	}
+	return r
 }
 
 func (c *ColorDefinition) RunKernel(tx *btcwire.MsgTx, inputs []ColorValue) ([]ColorValue, error) {

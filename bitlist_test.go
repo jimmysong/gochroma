@@ -3,7 +3,7 @@ package gochroma_test
 import (
 	"testing"
 
-	"github.com/jimmysong/gochroma"
+	"github.com/monetas/gochroma"
 )
 
 func TestNewBitList(t *testing.T) {
