@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/conformal/btcutil"
-	"github.com/conformal/btcwire"
+	"github.com/btcsuite/btcutil"
+	"github.com/btcsuite/btcwire"
 	"github.com/jimmysong/gochroma"
 )
 

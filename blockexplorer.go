@@ -3,8 +3,8 @@ package gochroma
 import (
 	"bytes"
 
-	"github.com/conformal/btcutil"
-	"github.com/conformal/btcwire"
+	"github.com/btcsuite/btcutil"
+	"github.com/btcsuite/btcwire"
 )
 
 // BlockReaderWriter is any place where we can get raw blockchain data

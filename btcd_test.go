@@ -7,8 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/conformal/btcnet"
-	"github.com/conformal/btcrpcclient"
+	"github.com/btcsuite/btcnet"
+	"github.com/btcsuite/btcrpcclient"
 	"github.com/jimmysong/gochroma"
 )
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/conformal/btcwire"
+	"github.com/btcsuite/btcwire"
 )
 
 var (

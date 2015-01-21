@@ -3,7 +3,7 @@ package gochroma
 import (
 	"fmt"
 
-	"github.com/conformal/btcwire"
+	"github.com/btcsuite/btcwire"
 )
 
 var (

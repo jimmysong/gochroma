@@ -4,7 +4,7 @@ import (
 	"crypto/rand"
 	"testing"
 
-	"github.com/conformal/btcwire"
+	"github.com/btcsuite/btcwire"
 	"github.com/jimmysong/gochroma"
 )
 
